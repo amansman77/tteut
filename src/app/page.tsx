@@ -2,88 +2,36 @@
 
 import { useState } from "react";
 
-interface MeaningResult {
-  dictionary: string;
-  lived: string[];
-  question: string;
-}
-
-type Step = "input" | "result" | "write" | "refine";
+type Step = "input" | "write";
 
 export default function Home() {
   const [word, setWord] = useState("");
-  const [result, setResult] = useState<MeaningResult | null>(null);
+  const [inputWord, setInputWord] = useState("");
   const [myMeaning, setMyMeaning] = useState("");
-  const [refined, setRefined] = useState("");
   const [step, setStep] = useState<Step>("input");
-  const [loading, setLoading] = useState(false);
-  const [refining, setRefining] = useState(false);
-  const [error, setError] = useState("");
   const [copied, setCopied] = useState(false);
 
-  const handleDiscover = async () => {
+  const handleDiscover = () => {
     if (!word.trim()) return;
-    setLoading(true);
-    setError("");
-    setResult(null);
+    setInputWord(word.trim());
     setMyMeaning("");
-    setRefined("");
-
-    try {
-      const res = await fetch("/api/transform", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ word }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "오류가 발생했습니다.");
-      setResult(data);
-      setStep("result");
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "오류가 발생했습니다.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleRefine = async () => {
-    if (!myMeaning.trim()) return;
-    setRefining(true);
-
-    try {
-      const res = await fetch("/api/refine", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ word, myMeaning }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "오류가 발생했습니다.");
-      setRefined(data.refined);
-      setStep("refine");
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "오류가 발생했습니다.");
-    } finally {
-      setRefining(false);
-    }
+    setStep("write");
   };
 
   const handleReset = () => {
     setWord("");
-    setResult(null);
+    setInputWord("");
     setMyMeaning("");
-    setRefined("");
     setStep("input");
-    setError("");
   };
 
   const handleCopy = async () => {
-    const text = refined || myMeaning;
     const lines = [
-      `${word}`,
+      inputWord,
       "",
-      result?.question ?? "",
+      `당신에게 ${inputWord}은(는) 무엇인가요?`,
       "",
-      text.trim(),
+      myMeaning.trim(),
       "",
       "— 뜨읏에서 나의 뜻을 발견했어요",
     ];
@@ -114,7 +62,7 @@ export default function Home() {
 
       {/* Step 1: Input */}
       {step === "input" && (
-        <section className="w-full max-w-xl mb-8">
+        <section className="w-full max-w-xl">
           <label className="block text-sm font-medium text-gray-700 mb-3">
             어떤 단어의 뜻을 발견하고 싶으신가요?
           </label>
@@ -129,87 +77,39 @@ export default function Home() {
             />
             <button
               onClick={handleDiscover}
-              disabled={loading || !word.trim()}
+              disabled={!word.trim()}
               className="bg-gray-900 text-white px-6 py-3 rounded-lg font-medium hover:bg-gray-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors whitespace-nowrap"
             >
-              {loading ? "발견 중..." : "발견하기"}
+              발견하기
             </button>
           </div>
-          {error && <p className="mt-2 text-sm text-red-500">{error}</p>}
         </section>
       )}
 
-      {/* Steps 2–7: Result */}
-      {(step === "result" || step === "write" || step === "refine") && result && (
+      {/* Step 2: Write */}
+      {step === "write" && (
         <section className="w-full max-w-xl space-y-4">
-          {/* 1. 단어 */}
+          {/* 단어 */}
           <div className="text-center py-4">
-            <span className="text-3xl font-bold text-gray-900">{word}</span>
+            <span className="text-3xl font-bold text-gray-900">{inputWord}</span>
           </div>
 
-          {/* 2. 사전적 의미 */}
-          <div className="rounded-2xl p-6 border border-gray-200 bg-white">
-            <p className="text-xs text-gray-400 uppercase tracking-widest mb-3">
-              사전적 의미
-            </p>
-            <p className="text-gray-600 text-sm leading-relaxed">{result.dictionary}</p>
-          </div>
-
-          {/* 3. 살아낸 뜻 */}
-          <div className="rounded-2xl p-6 border border-gray-200 bg-white">
-            <p className="text-xs text-gray-400 uppercase tracking-widest mb-4">
-              살아낸 뜻
-            </p>
-            <ul className="space-y-3">
-              {result.lived.map((item, i) => (
-                <li key={i} className="text-gray-700 text-sm leading-relaxed pl-3 border-l-2 border-gray-200">
-                  {item}
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          {/* 4 & 5. 질문 + 작성 */}
+          {/* 질문 + 작성 */}
           <div className="rounded-2xl p-6 bg-gray-900">
             <p className="text-gray-200 text-base font-medium mb-4">
-              {result.question}
+              당신에게 {inputWord}은(는) 무엇인가요?
             </p>
             <textarea
               value={myMeaning}
-              onChange={(e) => {
-                setMyMeaning(e.target.value);
-                if (step === "refine") setStep("write");
-              }}
-              placeholder={`나에게 ${word}은(는)...`}
-              rows={4}
+              onChange={(e) => setMyMeaning(e.target.value)}
+              placeholder={`나에게 ${inputWord}은(는)...`}
+              rows={5}
+              autoFocus
               className="w-full bg-white/10 text-white placeholder-gray-500 rounded-lg px-4 py-3 text-sm leading-relaxed resize-none focus:outline-none focus:ring-2 focus:ring-white/30"
             />
-            {myMeaning.trim() && step !== "refine" && (
-              <div className="mt-3 flex justify-end">
-                <button
-                  onClick={handleRefine}
-                  disabled={refining}
-                  className="text-sm bg-white text-gray-900 hover:bg-gray-100 transition-colors px-4 py-2 rounded-lg font-medium disabled:opacity-40"
-                >
-                  {refining ? "정리 중..." : "문장 다듬기"}
-                </button>
-              </div>
-            )}
           </div>
 
-          {/* 6. 정리 */}
-          {step === "refine" && refined && (
-            <div className="rounded-2xl p-6 border-2 border-gray-900 bg-white">
-              <p className="text-xs text-gray-400 uppercase tracking-widest mb-3">
-                나의 뜻
-              </p>
-              <p className="text-gray-900 text-base leading-relaxed font-medium">{refined}</p>
-            </div>
-          )}
-
-          {error && <p className="text-sm text-red-500">{error}</p>}
-
-          {/* 7. 공유 */}
+          {/* 버튼 */}
           <div className="flex gap-3 justify-end pt-1">
             <button
               onClick={handleReset}
@@ -217,7 +117,7 @@ export default function Home() {
             >
               다시 발견하기
             </button>
-            {(myMeaning.trim() || refined) && (
+            {myMeaning.trim() && (
               <button
                 onClick={handleCopy}
                 className="text-sm bg-gray-900 text-white hover:bg-gray-700 transition-colors px-4 py-2 rounded-lg"
