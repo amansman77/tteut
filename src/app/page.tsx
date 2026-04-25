@@ -73,7 +73,7 @@ export default function Home() {
               onChange={(e) => setWord(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && handleDiscover()}
               placeholder="예: 존중, 책임, 용기, 사랑..."
-              className="flex-1 border border-gray-300 rounded-lg px-4 py-3 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+              className="flex-1 border border-gray-300 rounded-lg px-4 py-3 bg-white text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
             />
             <button
               onClick={handleDiscover}
