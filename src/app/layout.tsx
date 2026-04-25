@@ -8,13 +8,13 @@ const geistSans = Geist({
 });
 
 export const metadata: Metadata = {
-  title: "뜨읏 — 감정을 언어로",
+  title: "뜨읏 — 내가 살아낸 뜻을 발견하다",
   description:
-    "내 감정을 더 정확한 언어로 표현해보세요. 뜨읏은 낮은 해상도의 감정 표현을 더 깊고 정교한 언어로 변환해드립니다.",
-  keywords: ["감정 표현", "언어 해상도", "감정 언어화", "자기이해", "뜨읏"],
+    "사전은 뜻을 설명하고, 삶은 뜻을 만듭니다. 뜨읏에서 단어의 사전적 의미를 넘어 나만의 살아낸 정의를 발견하세요.",
+  keywords: ["뜻 발견", "단어 의미", "삶의 의미", "자기이해", "뜨읏"],
   openGraph: {
-    title: "뜨읏 — 감정을 언어로",
-    description: "내 감정을 더 정확한 언어로 표현해보세요.",
+    title: "뜨읏 — 내가 살아낸 뜻을 발견하다",
+    description: "사전은 뜻을 설명하고, 삶은 뜻을 만듭니다.",
     type: "website",
     locale: "ko_KR",
   },

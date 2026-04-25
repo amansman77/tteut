@@ -4,29 +4,26 @@ import { NextRequest, NextResponse } from "next/server";
 const client = new Anthropic();
 
 export async function POST(req: NextRequest) {
-  const { emotion } = await req.json();
+  const { word } = await req.json();
 
-  if (!emotion || typeof emotion !== "string" || emotion.trim().length === 0) {
-    return NextResponse.json({ error: "감정을 입력해주세요." }, { status: 400 });
+  if (!word || typeof word !== "string" || word.trim().length === 0) {
+    return NextResponse.json({ error: "단어를 입력해주세요." }, { status: 400 });
   }
 
-  const prompt = `당신은 언어 해상도 전문가입니다. 사람들이 막연하게 표현하는 감정이나 상태를 더 정교하고 정확한 언어로 변환해주는 역할을 합니다.
+  const prompt = `당신은 언어와 삶의 의미를 탐구하는 전문가입니다.
+사용자가 입력한 단어/감정/상황에 대해 다음 세 가지를 제공해주세요.
 
-사용자 입력: "${emotion.trim()}"
+입력: "${word.trim()}"
 
-이 감정/상태를 3~5개의 더 높은 해상도의 언어로 표현해주세요.
-각 표현은 다음을 담아야 합니다:
-- 감정의 근원 또는 맥락
-- 구체적인 심리 상태
-- 사용자가 "맞아, 이게 내 감정이야"라고 느낄 수 있는 정밀함
+1. **사전적 의미**: 사회적으로 통용되는 기본 정의를 2~3문장으로
+2. **삶의 의미**: 이 단어가 실제 삶 속에서 어떻게 살아 숨쉬는지, 다양한 사람들이 각자의 방식으로 이 단어를 어떻게 경험하는지 구체적인 예시를 들어 2~3문장으로
+3. **질문**: 사용자가 자신만의 뜻을 발견하도록 돕는 열린 질문 하나 (예: "당신에게 ${word.trim()}은 무엇인가요?")
 
 JSON 형식으로만 응답해주세요:
 {
-  "expressions": [
-    "표현 1",
-    "표현 2",
-    "표현 3"
-  ]
+  "dictionary": "사전적 의미 내용",
+  "life": "삶의 의미 내용",
+  "question": "질문 내용"
 }`;
 
   const message = await client.messages.create({
