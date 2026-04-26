@@ -1,46 +1,51 @@
-import fs from "fs";
-import path from "path";
+import { getCloudflareContext } from "@opennextjs/cloudflare";
 
-const DATA_PATH = path.join(process.cwd(), "data", "livedMeanings.json");
+type Entries = Record<string, string[]>;
 
-type Store = Record<string, string[]>;
+async function getDB(): Promise<D1Database> {
+  const { env } = await getCloudflareContext({ async: true });
+  return env.DB;
+}
 
-function read(): Store {
-  try {
-    return JSON.parse(fs.readFileSync(DATA_PATH, "utf-8"));
-  } catch {
-    return {};
+export async function getLivedMeanings(word: string): Promise<string[] | null> {
+  const db = await getDB();
+  const rows = await db
+    .prepare("SELECT meaning FROM lived_meanings WHERE word = ? ORDER BY id ASC")
+    .bind(word)
+    .all<{ meaning: string }>();
+  if (rows.results.length === 0) return null;
+  return rows.results.map((r) => r.meaning);
+}
+
+export async function getAllEntries(): Promise<Entries> {
+  const db = await getDB();
+  const rows = await db
+    .prepare("SELECT word, meaning FROM lived_meanings ORDER BY word ASC, id ASC")
+    .all<{ word: string; meaning: string }>();
+
+  const entries: Entries = {};
+  for (const r of rows.results) {
+    if (!entries[r.word]) entries[r.word] = [];
+    entries[r.word].push(r.meaning);
   }
+  return entries;
 }
 
-function write(store: Store): void {
-  fs.writeFileSync(DATA_PATH, JSON.stringify(store, null, 2), "utf-8");
+export async function addMeaning(word: string, meaning: string): Promise<void> {
+  const db = await getDB();
+  await db
+    .prepare("INSERT INTO lived_meanings (word, meaning) VALUES (?, ?)")
+    .bind(word, meaning)
+    .run();
 }
 
-export function getLivedMeanings(word: string): string[] | null {
-  const store = read();
-  return store[word] ?? null;
-}
-
-export function getAllWords(): string[] {
-  return Object.keys(read());
-}
-
-export function getAllEntries(): Store {
-  return read();
-}
-
-export function addMeaning(word: string, meaning: string): void {
-  const store = read();
-  if (!store[word]) store[word] = [];
-  store[word].push(meaning);
-  write(store);
-}
-
-export function deleteMeaning(word: string, index: number): void {
-  const store = read();
-  if (!store[word]) return;
-  store[word].splice(index, 1);
-  if (store[word].length === 0) delete store[word];
-  write(store);
+export async function deleteMeaning(word: string, index: number): Promise<void> {
+  const db = await getDB();
+  const rows = await db
+    .prepare("SELECT id FROM lived_meanings WHERE word = ? ORDER BY id ASC")
+    .bind(word)
+    .all<{ id: number }>();
+  const target = rows.results[index];
+  if (!target) return;
+  await db.prepare("DELETE FROM lived_meanings WHERE id = ?").bind(target.id).run();
 }

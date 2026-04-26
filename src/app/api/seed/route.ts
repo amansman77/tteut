@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getAllEntries, addMeaning, deleteMeaning } from "@/lib/livedMeaningsStore";
 
 export async function GET() {
-  const entries = getAllEntries();
+  const entries = await getAllEntries();
   return NextResponse.json({ entries });
 }
 
@@ -16,7 +16,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "살아낸 뜻을 입력해주세요." }, { status: 400 });
   }
 
-  addMeaning(word.trim(), meaning.trim());
+  await addMeaning(word.trim(), meaning.trim());
   return NextResponse.json({ ok: true });
 }
 
@@ -30,6 +30,6 @@ export async function DELETE(req: NextRequest) {
     return NextResponse.json({ error: "인덱스가 필요합니다." }, { status: 400 });
   }
 
-  deleteMeaning(word, index);
+  await deleteMeaning(word, index);
   return NextResponse.json({ ok: true });
 }

@@ -8,6 +8,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ lived: null });
   }
 
-  const lived = getLivedMeanings(word.trim());
+  const lived = await getLivedMeanings(word.trim());
   return NextResponse.json({ lived });
 }
