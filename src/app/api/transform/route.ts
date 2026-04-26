@@ -1,7 +1,22 @@
-import Anthropic from "@anthropic-ai/sdk";
 import { NextRequest, NextResponse } from "next/server";
 
-const client = new Anthropic();
+interface StdictSense {
+  definition: string;
+  type: string;
+}
+
+interface StdictItem {
+  word: string;
+  pos: string;
+  sense: StdictSense | StdictSense[];
+}
+
+interface StdictResponse {
+  channel: {
+    total: number;
+    item?: StdictItem | StdictItem[];
+  };
+}
 
 export async function POST(req: NextRequest) {
   const { word } = await req.json();
@@ -10,42 +25,53 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "단어를 입력해주세요." }, { status: 400 });
   }
 
-  const prompt = `당신은 언어와 삶의 의미를 탐구하는 전문가입니다.
-사용자가 입력한 단어/감정/상황에 대해 다음을 제공해주세요.
+  const apiKey = process.env.STDICT_API_KEY;
+  const certKeyNo = process.env.STDICT_CERT_KEY_NO ?? "9128";
+  if (!apiKey) {
+    return NextResponse.json({ error: "사전 API 키가 설정되지 않았습니다." }, { status: 500 });
+  }
 
-입력: "${word.trim()}"
-
-1. **사전적 의미**: 사회적으로 통용되는 기본 정의를 2~3문장으로
-2. **살아낸 뜻**: 실제 삶 속에서 사람마다 다르게 경험하는 의미를 "어떤 사람에게 ${word.trim()}은 ..." 형식으로 3가지. 각각 한 문장으로.
-3. **질문**: 사용자가 자신만의 뜻을 발견하도록 돕는 열린 질문 하나. "당신에게 ${word.trim()}은(는) 무엇인가요?" 형식으로.
-
-JSON 형식으로만 응답해주세요:
-{
-  "dictionary": "사전적 의미 내용",
-  "lived": [
-    "어떤 사람에게 ${word.trim()}은 ...",
-    "어떤 사람에게 ${word.trim()}은 ...",
-    "어떤 사람에게 ${word.trim()}은 ..."
-  ],
-  "question": "질문 내용"
-}`;
-
-  const message = await client.messages.create({
-    model: "claude-sonnet-4-6",
-    max_tokens: 1024,
-    messages: [{ role: "user", content: prompt }],
+  const params = new URLSearchParams({
+    certkey_no: certKeyNo,
+    key: apiKey,
+    type_search: "search",
+    req_type: "json",
+    q: word.trim(),
+    num: "3",
   });
 
-  const content = message.content[0];
-  if (content.type !== "text") {
-    return NextResponse.json({ error: "응답 처리 중 오류가 발생했습니다." }, { status: 500 });
+  const url = `https://stdict.korean.go.kr/api/search.do?${params.toString()}`;
+  const res = await fetch(url);
+  const text = await res.text();
+
+  if (!text || text.trim().length === 0) {
+    return NextResponse.json({ dictionary: null });
   }
 
-  const jsonMatch = content.text.match(/\{[\s\S]*\}/);
-  if (!jsonMatch) {
-    return NextResponse.json({ error: "응답 파싱 중 오류가 발생했습니다." }, { status: 500 });
+  let data: StdictResponse;
+  try {
+    data = JSON.parse(text);
+  } catch {
+    return NextResponse.json({ dictionary: null });
   }
 
-  const result = JSON.parse(jsonMatch[0]);
-  return NextResponse.json(result);
+  const items = data.channel.item;
+  if (!items || data.channel.total === 0) {
+    return NextResponse.json({ dictionary: null });
+  }
+
+  const itemList = Array.isArray(items) ? items : [items];
+
+  const definitions = itemList
+    .flatMap((item) => {
+      const senses = Array.isArray(item.sense) ? item.sense : [item.sense];
+      return senses
+        .filter((s) => s.type === "일반어" || s.type === "전문어")
+        .map((s) => `(${item.pos}) ${s.definition}`);
+    })
+    .slice(0, 2);
+
+  return NextResponse.json({
+    dictionary: definitions.length > 0 ? definitions.join(" / ") : null,
+  });
 }

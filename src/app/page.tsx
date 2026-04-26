@@ -2,27 +2,63 @@
 
 import { useState } from "react";
 
-type Step = "input" | "write";
+interface DiscoverResult {
+  dictionary: string | null;
+  lived: string[] | null;
+}
+
+type Step = "input" | "result";
 
 export default function Home() {
   const [word, setWord] = useState("");
   const [inputWord, setInputWord] = useState("");
+  const [result, setResult] = useState<DiscoverResult | null>(null);
   const [myMeaning, setMyMeaning] = useState("");
   const [step, setStep] = useState<Step>("input");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
   const [copied, setCopied] = useState(false);
 
-  const handleDiscover = () => {
+  const handleDiscover = async () => {
     if (!word.trim()) return;
-    setInputWord(word.trim());
+    const trimmed = word.trim();
+    setLoading(true);
+    setError("");
+    setInputWord(trimmed);
     setMyMeaning("");
-    setStep("write");
+
+    try {
+      const res = await fetch("/api/transform", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ word: trimmed }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "오류가 발생했습니다.");
+
+      const livedRes = await fetch("/api/lived", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ word: trimmed }),
+      });
+      const livedData = await livedRes.json();
+
+      setResult({ dictionary: data.dictionary, lived: livedData.lived });
+      setStep("result");
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "오류가 발생했습니다.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleReset = () => {
     setWord("");
     setInputWord("");
+    setResult(null);
     setMyMeaning("");
     setStep("input");
+    setError("");
   };
 
   const handleCopy = async () => {
@@ -77,24 +113,54 @@ export default function Home() {
             />
             <button
               onClick={handleDiscover}
-              disabled={!word.trim()}
+              disabled={loading || !word.trim()}
               className="bg-gray-900 text-white px-6 py-3 rounded-lg font-medium hover:bg-gray-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors whitespace-nowrap"
             >
-              발견하기
+              {loading ? "찾는 중..." : "발견하기"}
             </button>
           </div>
+          {error && <p className="mt-2 text-sm text-red-500">{error}</p>}
         </section>
       )}
 
-      {/* Step 2: Write */}
-      {step === "write" && (
+      {/* Step 2: Result — 사전 → 사람 → 나 */}
+      {step === "result" && result && (
         <section className="w-full max-w-xl space-y-4">
-          {/* 단어 */}
+          {/* 1. 단어 */}
           <div className="text-center py-4">
             <span className="text-3xl font-bold text-gray-900">{inputWord}</span>
           </div>
 
-          {/* 질문 + 작성 */}
+          {/* 2. 사전적 의미 */}
+          {result.dictionary && (
+            <div className="rounded-2xl p-6 border border-gray-200 bg-white">
+              <p className="text-xs text-gray-400 uppercase tracking-widest mb-3">
+                사전적 의미
+              </p>
+              <p className="text-gray-600 text-sm leading-relaxed">{result.dictionary}</p>
+            </div>
+          )}
+
+          {/* 3. 살아낸 뜻 */}
+          {result.lived && result.lived.length > 0 && (
+            <div className="rounded-2xl p-6 border border-gray-200 bg-white">
+              <p className="text-xs text-gray-400 uppercase tracking-widest mb-4">
+                살아낸 뜻
+              </p>
+              <ul className="space-y-3">
+                {result.lived.map((item, i) => (
+                  <li
+                    key={i}
+                    className="text-gray-700 text-sm leading-relaxed pl-3 border-l-2 border-gray-200"
+                  >
+                    {item}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {/* 4 & 5. 질문 + 작성 */}
           <div className="rounded-2xl p-6 bg-gray-900">
             <p className="text-gray-200 text-base font-medium mb-4">
               당신에게 {inputWord}은(는) 무엇인가요?
@@ -103,13 +169,13 @@ export default function Home() {
               value={myMeaning}
               onChange={(e) => setMyMeaning(e.target.value)}
               placeholder={`나에게 ${inputWord}은(는)...`}
-              rows={5}
+              rows={4}
               autoFocus
               className="w-full bg-white/10 text-white placeholder-gray-500 rounded-lg px-4 py-3 text-sm leading-relaxed resize-none focus:outline-none focus:ring-2 focus:ring-white/30"
             />
           </div>
 
-          {/* 버튼 */}
+          {/* 6. 공유 버튼 */}
           <div className="flex gap-3 justify-end pt-1">
             <button
               onClick={handleReset}
