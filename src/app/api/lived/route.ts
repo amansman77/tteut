@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getLivedMeanings } from "@/lib/livedMeanings";
+import { getLivedMeanings } from "@/lib/livedMeaningsStore";
 
 export async function POST(req: NextRequest) {
   const { word } = await req.json();
