@@ -37,7 +37,6 @@ export async function POST(req: NextRequest) {
     type_search: "search",
     req_type: "json",
     q: word.trim(),
-    num: "3",
   });
 
   const url = `https://stdict.korean.go.kr/api/search.do?${params.toString()}`;
