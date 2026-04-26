@@ -7,6 +7,6 @@ assets = { directory = ".open-next/assets", binding = "ASSETS" }
 
 [[d1_databases]]
 binding = "DB"
-database_name = "tteut-db"
-database_id = "placeholder-run-wrangler-d1-create-tteut-db"
+database_name = "shared-db"
+database_id = "placeholder"
 migrations_dir = "migrations"
