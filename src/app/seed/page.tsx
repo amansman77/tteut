@@ -75,12 +75,20 @@ export default function SeedPage() {
 
   return (
     <main className="max-w-2xl mx-auto px-4 py-12 space-y-10">
-      <section>
-        <h1 className="text-2xl font-bold text-gray-900 mb-1">Founder Seeder</h1>
-        <p className="text-sm text-gray-400">
-          단어 {words.length}개 · 살아낸 뜻 {totalMeanings}개
-          <span className="ml-2 text-gray-300">/ 목표: 30단어 · 90개</span>
-        </p>
+      <section className="flex items-start justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900 mb-1">Founder Seeder</h1>
+          <p className="text-sm text-gray-400">
+            단어 {words.length}개 · 살아낸 뜻 {totalMeanings}개
+            <span className="ml-2 text-gray-300">/ 목표: 30단어 · 90개</span>
+          </p>
+        </div>
+        <a
+          href="/auth/logout"
+          className="text-xs text-gray-400 hover:text-gray-600 transition-colors mt-1"
+        >
+          로그아웃
+        </a>
       </section>
 
       {/* 입력 폼 */}
