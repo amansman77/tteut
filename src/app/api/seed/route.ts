@@ -7,7 +7,7 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
-  const { word, meaning } = await req.json();
+  const { word, meaning } = (await req.json()) as { word: unknown; meaning: unknown };
 
   if (!word || typeof word !== "string" || word.trim().length === 0) {
     return NextResponse.json({ error: "단어를 입력해주세요." }, { status: 400 });
@@ -21,7 +21,7 @@ export async function POST(req: NextRequest) {
 }
 
 export async function DELETE(req: NextRequest) {
-  const { word, index } = await req.json();
+  const { word, index } = (await req.json()) as { word: unknown; index: unknown };
 
   if (!word || typeof word !== "string") {
     return NextResponse.json({ error: "단어를 입력해주세요." }, { status: 400 });

@@ -4,7 +4,9 @@ import { NextRequest, NextResponse } from "next/server";
 const client = new Anthropic();
 
 export async function POST(req: NextRequest) {
-  const { word, myMeaning } = await req.json();
+  const body = (await req.json()) as { word: unknown; myMeaning: unknown };
+  const word = typeof body.word === "string" ? body.word : null;
+  const myMeaning = typeof body.myMeaning === "string" ? body.myMeaning : null;
 
   if (!word || !myMeaning || myMeaning.trim().length === 0) {
     return NextResponse.json({ error: "단어와 나의 뜻을 입력해주세요." }, { status: 400 });

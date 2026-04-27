@@ -33,7 +33,7 @@ export default function Home() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ word: trimmed }),
       });
-      const data = await res.json();
+      const data = (await res.json()) as { dictionary: string | null; error?: string };
       if (!res.ok) throw new Error(data.error || "오류가 발생했습니다.");
 
       const livedRes = await fetch("/api/lived", {
@@ -41,7 +41,7 @@ export default function Home() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ word: trimmed }),
       });
-      const livedData = await livedRes.json();
+      const livedData = (await livedRes.json()) as { lived: string[] | null };
 
       setResult({ dictionary: data.dictionary, lived: livedData.lived });
       setStep("result");

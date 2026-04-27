@@ -13,7 +13,7 @@ export default function SeedPage() {
 
   const load = useCallback(async () => {
     const res = await fetch("/api/seed");
-    const data = await res.json();
+    const data = (await res.json()) as { entries: Entries };
     setEntries(data.entries ?? {});
   }, []);
 
@@ -32,7 +32,7 @@ export default function SeedPage() {
         body: JSON.stringify({ word: word.trim(), meaning: meaning.trim() }),
       });
       if (!res.ok) {
-        const d = await res.json();
+        const d = (await res.json()) as { error?: string };
         setMessage(d.error ?? "오류가 발생했습니다.");
         return;
       }

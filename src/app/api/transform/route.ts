@@ -19,7 +19,7 @@ interface StdictResponse {
 }
 
 export async function POST(req: NextRequest) {
-  const { word } = await req.json();
+  const { word } = (await req.json()) as { word: unknown };
 
   if (!word || typeof word !== "string" || word.trim().length === 0) {
     return NextResponse.json({ error: "단어를 입력해주세요." }, { status: 400 });

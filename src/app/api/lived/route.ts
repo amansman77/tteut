@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getLivedMeanings } from "@/lib/livedMeaningsStore";
 
 export async function POST(req: NextRequest) {
-  const { word } = await req.json();
+  const { word } = (await req.json()) as { word: unknown };
 
   if (!word || typeof word !== "string") {
     return NextResponse.json({ lived: null });
