@@ -8,5 +8,5 @@ assets = { directory = ".open-next/assets", binding = "ASSETS" }
 [[d1_databases]]
 binding = "DB"
 database_name = "shared-db"
-database_id = "placeholder"
+database_id = "894124e2-8236-4647-a3a0-bc8674865889"
 migrations_dir = "migrations"
