@@ -8,6 +8,7 @@ assets = { directory = ".open-next/assets", binding = "ASSETS" }
 [vars]
 ADMIN_EMAIL = "amansman77@gmail.com"
 GOOGLE_REDIRECT_URI = "https://tteut.yetimates.com/auth/callback"
+NEXT_PUBLIC_SITE_URL = "https://tteut.yetimates.com"
 
 [[d1_databases]]
 binding = "DB"
