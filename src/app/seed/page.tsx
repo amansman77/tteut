@@ -4,8 +4,16 @@ import { useState, useEffect, useCallback } from "react";
 
 type Entries = Record<string, string[]>;
 
+interface PendingItem {
+  id: number;
+  word: string;
+  meaning: string;
+  created_at: string;
+}
+
 export default function SeedPage() {
   const [entries, setEntries] = useState<Entries>({});
+  const [pending, setPending] = useState<PendingItem[]>([]);
   const [word, setWord] = useState("");
   const [meaning, setMeaning] = useState("");
   const [saving, setSaving] = useState(false);
@@ -13,8 +21,9 @@ export default function SeedPage() {
 
   const load = useCallback(async () => {
     const res = await fetch("/api/seed");
-    const data = (await res.json()) as { entries: Entries };
+    const data = (await res.json()) as { entries: Entries; pending: PendingItem[] };
     setEntries(data.entries ?? {});
+    setPending(data.pending ?? []);
   }, []);
 
   useEffect(() => {
@@ -48,6 +57,15 @@ export default function SeedPage() {
       method: "DELETE",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ word: w, index: i }),
+    });
+    await load();
+  };
+
+  const handleReview = async (id: number, action: "approve" | "reject") => {
+    await fetch("/api/seed", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id, action }),
     });
     await load();
   };
@@ -99,8 +117,44 @@ export default function SeedPage() {
         </div>
       </section>
 
-      {/* 단어 목록 */}
+      {/* 사용자 제출 목록 */}
+      {pending.length > 0 && (
+        <section className="space-y-3">
+          <h2 className="text-sm font-semibold text-gray-700 uppercase tracking-widest">
+            사용자 제출 검수
+            <span className="ml-2 text-gray-400 font-normal normal-case">{pending.length}건 대기 중</span>
+          </h2>
+          {pending.map((item) => (
+            <div key={item.id} className="rounded-2xl border border-amber-200 bg-amber-50 p-5">
+              <div className="flex items-start justify-between gap-4">
+                <div className="flex-1 min-w-0">
+                  <span className="text-xs font-medium text-amber-700 mb-1 block">{item.word}</span>
+                  <p className="text-sm text-gray-700 leading-relaxed">{item.meaning}</p>
+                  <p className="text-xs text-gray-400 mt-2">{item.created_at}</p>
+                </div>
+                <div className="flex gap-2 shrink-0">
+                  <button
+                    onClick={() => handleReview(item.id, "reject")}
+                    className="text-xs text-gray-400 hover:text-red-500 transition-colors px-3 py-1.5 rounded-lg border border-gray-200 hover:border-red-200"
+                  >
+                    거절
+                  </button>
+                  <button
+                    onClick={() => handleReview(item.id, "approve")}
+                    className="text-xs text-white bg-gray-900 hover:bg-gray-700 transition-colors px-3 py-1.5 rounded-lg"
+                  >
+                    승인
+                  </button>
+                </div>
+              </div>
+            </div>
+          ))}
+        </section>
+      )}
+
+      {/* 살아낸 뜻 목록 */}
       <section className="space-y-4">
+        <h2 className="text-sm font-semibold text-gray-700 uppercase tracking-widest">살아낸 뜻</h2>
         {words.length === 0 && (
           <p className="text-sm text-gray-400 text-center py-8">아직 입력된 뜻이 없습니다.</p>
         )}
@@ -112,7 +166,7 @@ export default function SeedPage() {
             </div>
             <ul className="space-y-2">
               {entries[w].map((m, i) => (
-                <li key={i} className="flex items-start gap-2 group">
+                <li key={i} className="flex items-start gap-2">
                   <span className="flex-1 text-sm text-gray-600 leading-relaxed pl-3 border-l-2 border-gray-200">
                     {m}
                   </span>
