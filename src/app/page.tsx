@@ -18,6 +18,7 @@ export default function Home() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [copied, setCopied] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
 
   const handleDiscover = async () => {
     if (!word.trim()) return;
@@ -26,6 +27,7 @@ export default function Home() {
     setError("");
     setInputWord(trimmed);
     setMyMeaning("");
+    setSubmitted(false);
 
     try {
       const res = await fetch("/api/transform", {
@@ -59,6 +61,7 @@ export default function Home() {
     setMyMeaning("");
     setStep("input");
     setError("");
+    setSubmitted(false);
   };
 
   const handleCopy = async () => {
@@ -74,6 +77,16 @@ export default function Home() {
     await navigator.clipboard.writeText(lines.join("\n"));
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
+  };
+
+  const handleSubmit = async () => {
+    if (!myMeaning.trim()) return;
+    await fetch("/api/submit", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ word: inputWord, meaning: myMeaning.trim() }),
+    });
+    setSubmitted(true);
   };
 
   return (
@@ -167,7 +180,7 @@ export default function Home() {
             </p>
             <textarea
               value={myMeaning}
-              onChange={(e) => setMyMeaning(e.target.value)}
+              onChange={(e) => { setMyMeaning(e.target.value); setSubmitted(false); }}
               placeholder={`나에게 ${inputWord}은(는)...`}
               rows={4}
               autoFocus
@@ -175,7 +188,7 @@ export default function Home() {
             />
           </div>
 
-          {/* 6. 공유 버튼 */}
+          {/* 6. 버튼 */}
           <div className="flex gap-3 justify-end pt-1">
             <button
               onClick={handleReset}
@@ -184,12 +197,21 @@ export default function Home() {
               다시 발견하기
             </button>
             {myMeaning.trim() && (
-              <button
-                onClick={handleCopy}
-                className="text-sm bg-gray-900 text-white hover:bg-gray-700 transition-colors px-4 py-2 rounded-lg"
-              >
-                {copied ? "✓ 복사됨" : "나의 뜻 복사하기"}
-              </button>
+              <>
+                <button
+                  onClick={handleCopy}
+                  className="text-sm text-gray-600 hover:text-gray-900 transition-colors px-4 py-2 rounded-lg border border-gray-200 hover:border-gray-300"
+                >
+                  {copied ? "✓ 복사됨" : "복사하기"}
+                </button>
+                <button
+                  onClick={handleSubmit}
+                  disabled={submitted}
+                  className="text-sm bg-gray-900 text-white hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors px-4 py-2 rounded-lg"
+                >
+                  {submitted ? "✓ 남겨졌습니다" : "나의 뜻 남기기"}
+                </button>
+              </>
             )}
           </div>
         </section>
