@@ -118,7 +118,7 @@ export default function SeedPage() {
                   </span>
                   <button
                     onClick={() => handleDelete(w, i)}
-                    className="text-gray-300 hover:text-red-400 transition-colors text-xs mt-0.5 opacity-0 group-hover:opacity-100"
+                    className="text-gray-300 hover:text-red-400 active:text-red-500 transition-colors text-xs mt-0.5 shrink-0"
                   >
                     삭제
                   </button>
