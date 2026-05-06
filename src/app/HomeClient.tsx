@@ -208,9 +208,10 @@ export default function HomeClient({ discoveryWords, recentMeanings }: Props) {
                       onClick={() => handleDiscover(item.word)}
                       className="w-full text-left group"
                     >
-                      <p className="text-gray-700 text-sm leading-relaxed pl-3 border-l-2 border-gray-200 group-hover:border-gray-400 transition-colors">
-                        {item.meaning}
-                      </p>
+                      <div className="pl-3 border-l-2 border-gray-200 group-hover:border-gray-400 transition-colors">
+                        <p className="text-xs text-gray-400 mb-1">{item.word}</p>
+                        <p className="text-gray-700 text-sm leading-relaxed">{item.meaning}</p>
+                      </div>
                     </button>
                   </li>
                 ))}
