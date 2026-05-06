@@ -5,6 +5,7 @@ import { useState } from "react";
 interface DiscoverResult {
   dictionary: string | null;
   lived: string[] | null;
+  related: string[];
 }
 
 export default function Home() {
@@ -40,9 +41,9 @@ export default function Home() {
       const data = (await transformRes.json()) as { dictionary: string | null; error?: string };
       if (!transformRes.ok) throw new Error(data.error || "오류가 발생했습니다.");
 
-      const livedData = (await livedRes.json()) as { lived: string[] | null };
+      const livedData = (await livedRes.json()) as { lived: string[] | null; related: string[] };
 
-      setResult({ word: trimmed, data: { dictionary: data.dictionary, lived: livedData.lived } });
+      setResult({ word: trimmed, data: { dictionary: data.dictionary, lived: livedData.lived, related: livedData.related ?? [] } });
     } catch (e) {
       setError(e instanceof Error ? e.message : "오류가 발생했습니다.");
     } finally {
@@ -126,6 +127,24 @@ export default function Home() {
                   </li>
                 ))}
               </ul>
+            </div>
+          )}
+
+          {/* 이 뜻과 닿아있는 말 */}
+          {result.data.related.length > 0 && (
+            <div className="rounded-2xl p-6 border border-gray-200 bg-white">
+              <p className="text-xs text-gray-400 uppercase tracking-widest mb-4">이 뜻과 닿아있는 말</p>
+              <div className="flex flex-wrap gap-2">
+                {result.data.related.map((w) => (
+                  <a
+                    key={w}
+                    href={`/word/${encodeURIComponent(w)}`}
+                    className="inline-block px-4 py-2 rounded-full border border-gray-200 text-sm text-gray-700 hover:border-gray-400 hover:text-gray-900 transition-colors"
+                  >
+                    {w}
+                  </a>
+                ))}
+              </div>
             </div>
           )}
 
