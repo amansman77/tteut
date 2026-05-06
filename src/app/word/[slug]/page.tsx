@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { getCloudflareContext } from "@opennextjs/cloudflare";
 import { fetchDictionary } from "@/lib/dictionary";
 import { SITE_URL } from "@/lib/config";
+import { getRelatedWords } from "@/lib/semanticEdgesStore";
 import WordClient from "./WordClient";
 
 interface Props {
@@ -45,13 +46,14 @@ export default async function WordPage({ params }: Props) {
 
   const { env } = await getCloudflareContext({ async: true });
 
-  const [dictionary, rows] = await Promise.all([
+  const [dictionary, rows, relatedWords] = await Promise.all([
     fetchDictionary(word),
     env.DB.prepare(
       "SELECT meaning FROM tt_lived_meanings WHERE word = ? ORDER BY id ASC"
     )
       .bind(word)
       .all<{ meaning: string }>(),
+    getRelatedWords(word),
   ]);
 
   const lived = rows.results.map((r) => r.meaning);
@@ -60,5 +62,5 @@ export default async function WordPage({ params }: Props) {
     notFound();
   }
 
-  return <WordClient word={word} dictionary={dictionary} lived={lived} />;
+  return <WordClient word={word} dictionary={dictionary} lived={lived} relatedWords={relatedWords} />;
 }

@@ -2,13 +2,20 @@
 
 import { useState } from "react";
 
+interface RelatedWord {
+  word: string;
+  reason: string;
+  score: number;
+}
+
 interface Props {
   word: string;
   dictionary: string | null;
   lived: string[];
+  relatedWords: RelatedWord[];
 }
 
-export default function WordClient({ word, dictionary, lived }: Props) {
+export default function WordClient({ word, dictionary, lived, relatedWords }: Props) {
   const [myMeaning, setMyMeaning] = useState("");
   const [submitted, setSubmitted] = useState(false);
 
@@ -79,6 +86,24 @@ export default function WordClient({ word, dictionary, lived }: Props) {
             </div>
           )}
         </div>
+
+        {/* 이 뜻과 닿아있는 말 */}
+        {relatedWords.length > 0 && (
+          <div className="rounded-2xl p-6 border border-gray-200 bg-white">
+            <p className="text-xs text-gray-400 uppercase tracking-widest mb-4">이 뜻과 닿아있는 말</p>
+            <div className="flex flex-wrap gap-2">
+              {relatedWords.map((r) => (
+                <a
+                  key={r.word}
+                  href={`/word/${encodeURIComponent(r.word)}`}
+                  className="inline-block px-4 py-2 rounded-full border border-gray-200 text-sm text-gray-700 hover:border-gray-400 hover:text-gray-900 transition-colors"
+                >
+                  {r.word}
+                </a>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* 홈 링크 */}
         <div className="text-center pt-4">
