@@ -1,12 +1,7 @@
 "use client";
 
 import { useState } from "react";
-
-interface DiscoverResult {
-  dictionary: string | null;
-  lived: string[] | null;
-  related: string[];
-}
+import { useRouter } from "next/navigation";
 
 interface RecentMeaning {
   word: string;
@@ -19,57 +14,13 @@ interface Props {
 }
 
 export default function HomeClient({ discoveryWords, recentMeanings }: Props) {
+  const router = useRouter();
   const [word, setWord] = useState("");
-  const [result, setResult] = useState<{ word: string; data: DiscoverResult } | null>(null);
-  const [myMeaning, setMyMeaning] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-  const [submitted, setSubmitted] = useState(false);
 
-  const handleDiscover = async (target?: string) => {
-    const trimmed = (target ?? word).trim();
+  const goToWord = (target: string) => {
+    const trimmed = target.trim();
     if (!trimmed) return;
-    setWord(trimmed);
-    setLoading(true);
-    setError("");
-    setMyMeaning("");
-    setSubmitted(false);
-
-    try {
-      const [transformRes, livedRes] = await Promise.all([
-        fetch("/api/transform", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ word: trimmed }),
-        }),
-        fetch("/api/lived", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ word: trimmed }),
-        }),
-      ]);
-
-      const data = (await transformRes.json()) as { dictionary: string | null; error?: string };
-      if (!transformRes.ok) throw new Error(data.error || "오류가 발생했습니다.");
-
-      const livedData = (await livedRes.json()) as { lived: string[] | null; related: string[] };
-
-      setResult({ word: trimmed, data: { dictionary: data.dictionary, lived: livedData.lived, related: livedData.related ?? [] } });
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "오류가 발생했습니다.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleSubmit = async () => {
-    if (!myMeaning.trim() || !result) return;
-    await fetch("/api/submit", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ word: result.word, meaning: myMeaning.trim() }),
-    });
-    setSubmitted(true);
+    router.push(`/word/${encodeURIComponent(trimmed)}`);
   };
 
   return (
@@ -93,133 +44,62 @@ export default function HomeClient({ discoveryWords, recentMeanings }: Props) {
             type="text"
             value={word}
             onChange={(e) => setWord(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && handleDiscover()}
+            onKeyDown={(e) => e.key === "Enter" && goToWord(word)}
             placeholder="예: 존중, 책임, 용기, 사랑..."
             className="flex-1 border border-gray-300 rounded-lg px-4 py-3 bg-white text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
           />
           <button
-            onClick={() => handleDiscover()}
-            disabled={loading || !word.trim()}
+            onClick={() => goToWord(word)}
+            disabled={!word.trim()}
             className="bg-gray-900 text-white px-6 py-3 rounded-lg font-medium hover:bg-gray-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors whitespace-nowrap"
           >
-            {loading ? "찾는 중..." : "발견하기"}
+            발견하기
           </button>
         </div>
-        {error && <p className="mt-2 text-sm text-red-500">{error}</p>}
       </section>
 
-      {/* 검색 결과 */}
-      {result ? (
-        <section className="w-full max-w-xl space-y-4">
-          <div className="text-center py-4">
-            <span className="text-3xl font-bold text-gray-900">{result.word}</span>
-          </div>
-
-          {result.data.dictionary && (
-            <div className="rounded-2xl p-6 border border-gray-200 bg-white">
-              <p className="text-xs text-gray-400 uppercase tracking-widest mb-3">사전적 의미</p>
-              <p className="text-gray-600 text-sm leading-relaxed">{result.data.dictionary}</p>
-            </div>
-          )}
-
-          {result.data.lived && result.data.lived.length > 0 && (
-            <div className="rounded-2xl p-6 border border-gray-200 bg-white">
-              <p className="text-xs text-gray-400 uppercase tracking-widest mb-4">살아낸 뜻들</p>
-              <ul className="space-y-3">
-                {result.data.lived.map((item, i) => (
-                  <li key={i} className="text-gray-700 text-sm leading-relaxed pl-3 border-l-2 border-gray-200">
-                    {item}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
-
-          {result.data.related.length > 0 && (
-            <div className="rounded-2xl p-6 border border-gray-200 bg-white">
-              <p className="text-xs text-gray-400 uppercase tracking-widest mb-4">이 뜻과 닿아있는 말</p>
-              <div className="flex flex-wrap gap-2">
-                {result.data.related.map((w) => (
-                  <button
-                    key={w}
-                    onClick={() => handleDiscover(w)}
-                    className="inline-block px-4 py-2 rounded-full border border-gray-200 text-sm text-gray-700 hover:border-gray-400 hover:text-gray-900 transition-colors"
-                  >
-                    {w}
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
-
-          <div className="rounded-2xl p-6 bg-gray-900">
-            <p className="text-gray-200 text-base font-medium mb-4">
-              당신에게 {result.word}은(는) 무엇인가요?
-            </p>
-            <textarea
-              value={myMeaning}
-              onChange={(e) => { setMyMeaning(e.target.value); setSubmitted(false); }}
-              placeholder={`나에게 ${result.word}은(는)...`}
-              rows={4}
-              className="w-full bg-white/10 text-white placeholder-gray-500 rounded-lg px-4 py-3 text-sm leading-relaxed resize-none focus:outline-none focus:ring-2 focus:ring-white/30"
-            />
-            {myMeaning.trim() && (
-              <div className="flex justify-end mt-3">
+      {/* Discovery Layer */}
+      <section className="w-full max-w-xl space-y-8">
+        {/* 살아있는 단어 */}
+        {discoveryWords.length > 0 && (
+          <div>
+            <p className="text-xs text-gray-400 uppercase tracking-widest mb-4">지금 사람들이 살아낸 뜻</p>
+            <div className="flex flex-wrap gap-2">
+              {discoveryWords.map((w) => (
                 <button
-                  onClick={handleSubmit}
-                  disabled={submitted}
-                  className="text-sm bg-white text-gray-900 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors px-5 py-2 rounded-lg font-medium"
+                  key={w}
+                  onClick={() => goToWord(w)}
+                  className="inline-block px-4 py-2 rounded-full border border-gray-200 bg-white text-sm text-gray-700 hover:border-gray-400 hover:text-gray-900 transition-colors"
                 >
-                  {submitted ? "✓ 남겨졌습니다" : "내 뜻 남기기"}
+                  {w}
                 </button>
-              </div>
-            )}
+              ))}
+            </div>
           </div>
-        </section>
-      ) : (
-        /* Discovery Layer — 검색 전 초기 화면 */
-        <section className="w-full max-w-xl space-y-8">
-          {/* 살아있는 단어 */}
-          {discoveryWords.length > 0 && (
-            <div>
-              <p className="text-xs text-gray-400 uppercase tracking-widest mb-4">지금 사람들이 살아낸 뜻</p>
-              <div className="flex flex-wrap gap-2">
-                {discoveryWords.map((w) => (
-                  <button
-                    key={w}
-                    onClick={() => handleDiscover(w)}
-                    className="inline-block px-4 py-2 rounded-full border border-gray-200 bg-white text-sm text-gray-700 hover:border-gray-400 hover:text-gray-900 transition-colors"
-                  >
-                    {w}
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
+        )}
 
-          {/* 최근 남겨진 뜻 */}
-          {recentMeanings.length > 0 && (
-            <div>
-              <p className="text-xs text-gray-400 uppercase tracking-widest mb-4">최근 남겨진 뜻</p>
-              <ul className="space-y-3">
-                {recentMeanings.map((item, i) => (
-                  <li key={i}>
-                    <button
-                      onClick={() => handleDiscover(item.word)}
-                      className="w-full text-left group"
-                    >
-                      <div className="pl-3 border-l-2 border-gray-200 group-hover:border-gray-400 transition-colors">
-                        <p className="text-xs text-gray-400 mb-1">{item.word}</p>
-                        <p className="text-gray-700 text-sm leading-relaxed">{item.meaning}</p>
-                      </div>
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
-        </section>
-      )}
+        {/* 최근 남겨진 뜻 */}
+        {recentMeanings.length > 0 && (
+          <div>
+            <p className="text-xs text-gray-400 uppercase tracking-widest mb-4">최근 남겨진 뜻</p>
+            <ul className="space-y-3">
+              {recentMeanings.map((item, i) => (
+                <li key={i}>
+                  <button
+                    onClick={() => goToWord(item.word)}
+                    className="w-full text-left group"
+                  >
+                    <div className="pl-3 border-l-2 border-gray-200 group-hover:border-gray-400 transition-colors">
+                      <p className="text-xs text-gray-400 mb-1">{item.word}</p>
+                      <p className="text-gray-700 text-sm leading-relaxed">{item.meaning}</p>
+                    </div>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+      </section>
 
       {/* 하단 철학 */}
       <section className="mt-24 text-center max-w-md">
