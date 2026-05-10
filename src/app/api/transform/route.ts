@@ -8,6 +8,9 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "단어를 입력해주세요." }, { status: 400 });
   }
 
-  const dictionary = await fetchDictionary(word.trim());
-  return NextResponse.json({ dictionary });
+  const result = await fetchDictionary(word.trim());
+  return NextResponse.json({
+    dictionary: result?.definition ?? null,
+    hanja: result?.hanja ?? null,
+  });
 }

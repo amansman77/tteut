@@ -6,6 +6,7 @@ interface StdictSense {
 interface StdictItem {
   word: string;
   pos: string;
+  origin?: string;
   sense: StdictSense | StdictSense[];
 }
 
@@ -16,7 +17,12 @@ interface StdictResponse {
   };
 }
 
-export async function fetchDictionary(word: string): Promise<string | null> {
+export interface DictionaryResult {
+  definition: string;
+  hanja: string | null;
+}
+
+export async function fetchDictionary(word: string): Promise<DictionaryResult | null> {
   const apiKey = process.env.STDICT_API_KEY;
   const certKeyNo = process.env.STDICT_CERT_KEY_NO ?? "9128";
   if (!apiKey) return null;
@@ -39,8 +45,11 @@ export async function fetchDictionary(word: string): Promise<string | null> {
     if (!items || data.channel.total === 0) return null;
 
     const itemList = Array.isArray(items) ? items : [items];
+    let hanja: string | null = null;
+
     const definitions = itemList
       .flatMap((item) => {
+        if (item.origin && !hanja) hanja = item.origin;
         const senses = Array.isArray(item.sense) ? item.sense : [item.sense];
         return senses
           .filter((s) => s.type === "일반어" || s.type === "전문어")
@@ -48,7 +57,7 @@ export async function fetchDictionary(word: string): Promise<string | null> {
       })
       .slice(0, 2);
 
-    return definitions.length > 0 ? definitions.join(" / ") : null;
+    return definitions.length > 0 ? { definition: definitions.join(" / "), hanja } : null;
   } catch {
     return null;
   }
