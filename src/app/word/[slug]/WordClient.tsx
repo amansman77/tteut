@@ -15,7 +15,7 @@ interface HanjaChar {
 }
 
 interface DictionaryResult {
-  definition: string;
+  definitions: string[];
   hanja: string | null;
   hanjaChars: HanjaChar[];
 }
@@ -63,7 +63,11 @@ export default function WordClient({ word, dictionary, lived, relatedWords }: Pr
                 ))}
               </div>
             )}
-            <p className="text-gray-600 text-sm leading-relaxed">{dictionary.definition}</p>
+            <ul className="space-y-1">
+              {dictionary.definitions.map((def, i) => (
+                <li key={i} className="text-gray-600 text-sm leading-relaxed">{def}</li>
+              ))}
+            </ul>
           </div>
         )}
 

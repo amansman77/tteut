@@ -20,7 +20,7 @@ interface StdictResponse {
 }
 
 export interface DictionaryResult {
-  definition: string;
+  definitions: string[];
   hanja: string | null;
   hanjaChars: HanjaChar[];
 }
@@ -63,7 +63,7 @@ export async function fetchDictionary(word: string): Promise<DictionaryResult | 
     if (definitions.length === 0) return null;
 
     return {
-      definition: definitions.join(" / "),
+      definitions,
       hanja,
       hanjaChars: hanja ? parseHanja(hanja) : [],
     };

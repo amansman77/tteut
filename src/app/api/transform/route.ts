@@ -10,7 +10,7 @@ export async function POST(req: NextRequest) {
 
   const result = await fetchDictionary(word.trim());
   return NextResponse.json({
-    dictionary: result?.definition ?? null,
+    dictionary: result ? result.definitions.join(" / ") : null,
     hanja: result?.hanja ?? null,
   });
 }
