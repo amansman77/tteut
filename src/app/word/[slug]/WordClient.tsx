@@ -8,9 +8,16 @@ interface RelatedWord {
   score: number;
 }
 
+interface HanjaChar {
+  char: string;
+  reading: string;
+  meaning: string;
+}
+
 interface DictionaryResult {
   definition: string;
   hanja: string | null;
+  hanjaChars: HanjaChar[];
 }
 
 interface Props {
@@ -46,8 +53,15 @@ export default function WordClient({ word, dictionary, lived, relatedWords }: Pr
         {dictionary && (
           <div className="rounded-2xl p-6 border border-gray-200 bg-white">
             <p className="text-xs text-gray-400 uppercase tracking-widest mb-3">사전적 의미</p>
-            {dictionary.hanja && (
-              <p className="text-sm text-gray-400 mb-2">{dictionary.hanja}</p>
+            {dictionary.hanjaChars.length > 0 && (
+              <div className="flex flex-wrap gap-3 mb-3">
+                {dictionary.hanjaChars.map((h, i) => (
+                  <span key={i} className="text-sm text-gray-500">
+                    <span className="font-medium text-gray-700">{h.char}</span>
+                    <span className="ml-1 text-gray-400">{h.meaning} {h.reading}</span>
+                  </span>
+                ))}
+              </div>
             )}
             <p className="text-gray-600 text-sm leading-relaxed">{dictionary.definition}</p>
           </div>

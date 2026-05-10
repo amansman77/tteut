@@ -1,3 +1,5 @@
+import { parseHanja, HanjaChar } from "./hanjaLookup";
+
 interface StdictSense {
   definition: string;
   type: string;
@@ -20,6 +22,7 @@ interface StdictResponse {
 export interface DictionaryResult {
   definition: string;
   hanja: string | null;
+  hanjaChars: HanjaChar[];
 }
 
 export async function fetchDictionary(word: string): Promise<DictionaryResult | null> {
@@ -57,7 +60,13 @@ export async function fetchDictionary(word: string): Promise<DictionaryResult | 
       })
       .slice(0, 2);
 
-    return definitions.length > 0 ? { definition: definitions.join(" / "), hanja } : null;
+    if (definitions.length === 0) return null;
+
+    return {
+      definition: definitions.join(" / "),
+      hanja,
+      hanjaChars: hanja ? parseHanja(hanja) : [],
+    };
   } catch {
     return null;
   }
