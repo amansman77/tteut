@@ -1,5 +1,4 @@
 import { Metadata } from "next";
-import { notFound } from "next/navigation";
 import { getCloudflareContext } from "@opennextjs/cloudflare";
 import { fetchDictionary } from "@/lib/dictionary";
 import { SITE_URL } from "@/lib/config";
@@ -61,10 +60,6 @@ export default async function WordPage({ params }: Props) {
 
   const lived = rows.results.map((r) => r.meaning);
   const relatedWords = edgeRows.results;
-
-  if (!dictionary && lived.length === 0) {
-    notFound();
-  }
 
   return <WordClient word={word} dictionary={dictionary} lived={lived} relatedWords={relatedWords} />;
 }

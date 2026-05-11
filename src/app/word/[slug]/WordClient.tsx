@@ -71,6 +71,14 @@ export default function WordClient({ word, dictionary, lived, relatedWords }: Pr
           </div>
         )}
 
+        {/* 살아낸 뜻 없음 안내 */}
+        {!dictionary && lived.length === 0 && (
+          <div className="rounded-2xl p-6 border border-gray-200 bg-white text-center">
+            <p className="text-gray-500 text-sm mb-1">아직 살아낸 뜻이 없습니다.</p>
+            <p className="text-gray-400 text-sm">첫 번째로 뜻을 남겨보세요.</p>
+          </div>
+        )}
+
         {/* 살아낸 뜻들 */}
         {lived.length > 0 && (
           <div className="rounded-2xl p-6 border border-gray-200 bg-white">
