@@ -61,5 +61,15 @@ export default async function WordPage({ params }: Props) {
   const lived = rows.results.map((r) => r.meaning);
   const relatedWords = edgeRows.results;
 
+  if (lived.length === 0 && env.DISCORD_WEBHOOK_URL) {
+    fetch(env.DISCORD_WEBHOOK_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        content: `**살아낸 뜻 없음**: \`${word}\`\n> 누군가 이 단어를 검색했지만 등록된 뜻이 없습니다.`,
+      }),
+    }).catch(() => {});
+  }
+
   return <WordClient word={word} dictionary={dictionary} lived={lived} relatedWords={relatedWords} />;
 }
