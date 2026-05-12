@@ -1,19 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getCloudflareContext } from "@opennextjs/cloudflare";
-
-async function notifyNewMeaning(word: string, meaning: string, webhookUrl: string) {
-  try {
-    await fetch(webhookUrl, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        content: `**새로운 뜻이 남겨졌습니다** ✍️\n**단어**: ${word}\n**뜻**: ${meaning}`,
-      }),
-    });
-  } catch {
-    // 알림 실패가 응답에 영향을 주지 않음
-  }
-}
+import { notifyNewMeaning } from "@/lib/notify";
 
 export async function POST(req: NextRequest) {
   const { word, meaning } = (await req.json()) as { word: unknown; meaning: unknown };
@@ -33,7 +20,7 @@ export async function POST(req: NextRequest) {
     .run();
 
   if (env.DISCORD_WEBHOOK_URL) {
-    await notifyNewMeaning(word.trim(), meaning.trim(), env.DISCORD_WEBHOOK_URL);
+    await notifyNewMeaning(env.DISCORD_WEBHOOK_URL, word.trim(), meaning.trim());
   }
 
   return NextResponse.json({ ok: true });

@@ -2,6 +2,7 @@ import { Metadata } from "next";
 import { getCloudflareContext } from "@opennextjs/cloudflare";
 import { fetchDictionary } from "@/lib/dictionary";
 import { SITE_URL } from "@/lib/config";
+import { notifyMissingWord } from "@/lib/notify";
 import WordClient from "./WordClient";
 
 interface Props {
@@ -62,17 +63,7 @@ export default async function WordPage({ params }: Props) {
   const relatedWords = edgeRows.results;
 
   if (lived.length === 0 && env.DISCORD_WEBHOOK_URL) {
-    try {
-      await fetch(env.DISCORD_WEBHOOK_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          content: `**살아낸 뜻 없음**: \`${word}\`\n> 누군가 이 단어를 검색했지만 등록된 뜻이 없습니다.`,
-        }),
-      });
-    } catch {
-      // 알림 실패가 응답에 영향을 주지 않음
-    }
+    await notifyMissingWord(env.DISCORD_WEBHOOK_URL, word);
   }
 
   return <WordClient word={word} dictionary={dictionary} lived={lived} relatedWords={relatedWords} />;
