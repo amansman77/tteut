@@ -101,23 +101,31 @@ export default function WordClient({ word, dictionary, lived, relatedWords }: Pr
           <p className="text-gray-200 text-base font-medium mb-4">
             당신에게 {word}은(는) 무엇인가요?
           </p>
-          <textarea
-            value={myMeaning}
-            onChange={(e) => { setMyMeaning(e.target.value); setSubmitted(false); }}
-            placeholder={`나에게 ${word}은(는)...`}
-            rows={4}
-            className="w-full bg-white/10 text-white placeholder-gray-500 rounded-lg px-4 py-3 text-sm leading-relaxed resize-none focus:outline-none focus:ring-2 focus:ring-white/30"
-          />
-          {myMeaning.trim() && (
-            <div className="flex justify-end mt-3">
-              <button
-                onClick={handleSubmit}
-                disabled={submitted}
-                className="text-sm bg-white text-gray-900 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors px-5 py-2 rounded-lg font-medium"
-              >
-                {submitted ? "✓ 남겨졌습니다" : "내 뜻 남기기"}
-              </button>
+          {submitted ? (
+            <div className="text-center py-4">
+              <p className="text-white font-medium mb-1">뜻이 남겨졌습니다.</p>
+              <p className="text-gray-400 text-sm">검토 후 이 페이지에 게시됩니다.</p>
             </div>
+          ) : (
+            <>
+              <textarea
+                value={myMeaning}
+                onChange={(e) => setMyMeaning(e.target.value)}
+                placeholder={`나에게 ${word}은(는)...`}
+                rows={4}
+                className="w-full bg-white/10 text-white placeholder-gray-500 rounded-lg px-4 py-3 text-sm leading-relaxed resize-none focus:outline-none focus:ring-2 focus:ring-white/30"
+              />
+              {myMeaning.trim() && (
+                <div className="flex justify-end mt-3">
+                  <button
+                    onClick={handleSubmit}
+                    className="text-sm bg-white text-gray-900 hover:bg-gray-100 transition-colors px-5 py-2 rounded-lg font-medium"
+                  >
+                    내 뜻 남기기
+                  </button>
+                </div>
+              )}
+            </>
           )}
         </div>
 
