@@ -14,7 +14,7 @@ export default async function Home() {
       "SELECT word, meaning FROM tt_lived_meanings ORDER BY id DESC LIMIT 5"
     ).all<{ word: string; meaning: string }>(),
     env.DB.prepare(
-      "SELECT normalized_term as word, search_count FROM tt_search_demands WHERE fulfilled = 0 AND search_count >= 2 ORDER BY search_count DESC, last_seen_at DESC LIMIT 5"
+      "SELECT normalized_term as word, search_count FROM tt_search_demands WHERE fulfilled = 0 ORDER BY search_count DESC, last_seen_at DESC LIMIT 5"
     ).all<{ word: string; search_count: number }>(),
   ]);
 
