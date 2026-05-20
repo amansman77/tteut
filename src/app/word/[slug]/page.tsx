@@ -69,6 +69,13 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
   };
 }
 
+function getDemandType(dictionaryFound: boolean, livedCount: number): string {
+  if (livedCount > 0 && !dictionaryFound) return "DICTIONARY_EMPTY";
+  if (livedCount > 0) return "FULFILLED";
+  if (!dictionaryFound) return "BOTH_EMPTY";
+  return "LIVED_MEANING_EMPTY";
+}
+
 export default async function WordPage({ params, searchParams }: Props) {
   const { slug } = await params;
   const { highlight } = await searchParams;
@@ -94,7 +101,30 @@ export default async function WordPage({ params, searchParams }: Props) {
   const relatedWords = edgeRows.results;
   const highlightId = highlight ? parseInt(highlight, 10) : undefined;
 
-  if (lived.length === 0 && env.DISCORD_WEBHOOK_URL) {
+  const dictionaryFound = dictionary !== null;
+  const livedCount = lived.length;
+  const demandType = getDemandType(dictionaryFound, livedCount);
+  const fulfilled = livedCount > 0 ? 1 : 0;
+
+  try {
+    await env.DB.prepare(`
+      INSERT INTO tt_search_demands (normalized_term, raw_term, search_count, dictionary_status, lived_meaning_count, demand_type, fulfilled, last_seen_at)
+      VALUES (?, ?, 1, ?, ?, ?, ?, datetime('now'))
+      ON CONFLICT (normalized_term) DO UPDATE SET
+        search_count = search_count + 1,
+        dictionary_status = excluded.dictionary_status,
+        lived_meaning_count = excluded.lived_meaning_count,
+        demand_type = excluded.demand_type,
+        fulfilled = excluded.fulfilled,
+        last_seen_at = excluded.last_seen_at
+    `)
+      .bind(word, word, dictionaryFound ? "FOUND" : "NOT_FOUND", livedCount, demandType, fulfilled)
+      .run();
+  } catch {
+    // demand 기록 실패해도 페이지는 정상 렌더링
+  }
+
+  if (livedCount === 0 && env.DISCORD_WEBHOOK_URL) {
     await notifyMissingWord(env.DISCORD_WEBHOOK_URL, word);
   }
 

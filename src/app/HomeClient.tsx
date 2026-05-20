@@ -8,12 +8,18 @@ interface RecentMeaning {
   meaning: string;
 }
 
+interface DemandWord {
+  word: string;
+  search_count: number;
+}
+
 interface Props {
   discoveryWords: string[];
   recentMeanings: RecentMeaning[];
+  demandWords: DemandWord[];
 }
 
-export default function HomeClient({ discoveryWords, recentMeanings }: Props) {
+export default function HomeClient({ discoveryWords, recentMeanings, demandWords }: Props) {
   const router = useRouter();
   const [word, setWord] = useState("");
 
@@ -75,6 +81,37 @@ export default function HomeClient({ discoveryWords, recentMeanings }: Props) {
                 </button>
               ))}
             </div>
+          </div>
+        )}
+
+        {/* 지금 찾고 있는 뜻 */}
+        {demandWords.length > 0 && (
+          <div>
+            <p className="text-xs text-gray-400 uppercase tracking-widest mb-4">지금 찾고 있는 뜻</p>
+            <ul className="space-y-3">
+              {demandWords.map((item, i) => (
+                <li key={item.word}>
+                  <button
+                    onClick={() => goToWord(item.word)}
+                    className="w-full text-left group"
+                  >
+                    <div className="pl-3 border-l-2 border-gray-200 group-hover:border-gray-400 transition-colors">
+                      <div className="flex items-baseline gap-2 mb-0.5">
+                        <p className="text-sm font-medium text-gray-700 group-hover:text-gray-900 transition-colors">
+                          {item.word}
+                        </p>
+                        <p className="text-xs text-gray-400">{item.search_count}명이 찾고 있어요</p>
+                      </div>
+                      <p className="text-xs text-gray-400">
+                        {i % 2 === 0
+                          ? "누군가 이 말을 찾고 있어요."
+                          : `당신에게 ${item.word}은(는) 무엇인가요?`}
+                      </p>
+                    </div>
+                  </button>
+                </li>
+              ))}
+            </ul>
           </div>
         )}
 

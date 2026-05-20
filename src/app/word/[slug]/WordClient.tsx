@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { useRouter } from "next/navigation";
 
 interface RelatedWord {
   word: string;
@@ -35,11 +34,11 @@ interface Props {
 }
 
 export default function WordClient({ word, dictionary, lived, relatedWords, highlightId }: Props) {
-  const router = useRouter();
   const [myMeaning, setMyMeaning] = useState("");
   const [submitted, setSubmitted] = useState(false);
   const [copiedId, setCopiedId] = useState<number | null>(null);
   const highlightRef = useRef<HTMLLIElement | null>(null);
+  const inputRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     if (highlightRef.current) {
@@ -113,11 +112,49 @@ export default function WordClient({ word, dictionary, lived, relatedWords, high
           </div>
         )}
 
-        {/* 살아낸 뜻 없음 안내 */}
+        {/* Type A: 사전 있음, 살아낸 뜻 없음 */}
+        {dictionary && lived.length === 0 && (
+          <div className="rounded-2xl p-6 border border-gray-200 bg-white">
+            <p className="text-gray-500 text-sm mb-2">
+              사전은 이 말을 설명했지만,<br />
+              아직 누군가의 삶으로는 남겨지지 않았어요.
+            </p>
+            <button
+              onClick={() => inputRef.current?.scrollIntoView({ behavior: "smooth", block: "center" })}
+              className="text-sm font-medium text-gray-900 hover:underline"
+            >
+              첫 번째 뜻 남기기 →
+            </button>
+          </div>
+        )}
+
+        {/* Type B: 사전 없음, 살아낸 뜻 없음 */}
         {!dictionary && lived.length === 0 && (
-          <div className="rounded-2xl p-6 border border-gray-200 bg-white text-center">
-            <p className="text-gray-500 text-sm mb-1">아직 살아낸 뜻이 없습니다.</p>
-            <p className="text-gray-400 text-sm">첫 번째로 뜻을 남겨보세요.</p>
+          <div className="rounded-2xl p-6 border border-gray-200 bg-white">
+            <p className="text-gray-500 text-sm mb-2">
+              아직 이 말은 사전에도,<br />
+              누군가의 삶에도 남겨지지 않았어요.
+            </p>
+            <p className="text-gray-400 text-xs mb-3">
+              하지만 누군가 이 말을 찾았다면,<br />
+              이미 의미가 시작된 것일 수 있어요.
+            </p>
+            <button
+              onClick={() => inputRef.current?.scrollIntoView({ behavior: "smooth", block: "center" })}
+              className="text-sm font-medium text-gray-900 hover:underline"
+            >
+              이 말의 첫 뜻 남기기 →
+            </button>
+          </div>
+        )}
+
+        {/* Type C: 사전 없음, 살아낸 뜻 있음 */}
+        {!dictionary && lived.length > 0 && (
+          <div className="rounded-2xl px-6 py-4 border border-gray-100 bg-gray-50">
+            <p className="text-xs text-gray-400 leading-relaxed">
+              사전에는 없는 말이지만,<br />
+              누군가의 삶에는 이미 살아 있는 말입니다.
+            </p>
           </div>
         )}
 
@@ -163,7 +200,7 @@ export default function WordClient({ word, dictionary, lived, relatedWords, high
         )}
 
         {/* 내 뜻 입력 */}
-        <div className="rounded-2xl p-6 bg-gray-900">
+        <div ref={inputRef} className="rounded-2xl p-6 bg-gray-900">
           <p className="text-gray-200 text-base font-medium mb-4">
             당신에게 {word}은(는) 무엇인가요?
           </p>
