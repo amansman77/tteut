@@ -44,6 +44,10 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
       : `${word}에 대한 살아낸 뜻들을 발견하세요. 사전의 뜻이 아닌 삶이 만든 의미를 뜨읏에서 만나보세요.`;
   }
 
+  const ogUrl = highlight
+    ? `${SITE_URL}/word/${encodeURIComponent(word)}?highlight=${highlight}`
+    : canonical;
+
   return {
     title: `${word} | 뜨읏`,
     description,
@@ -51,10 +55,16 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
     openGraph: {
       title: `${word} | 뜨읏`,
       description,
-      url: canonical,
+      url: ogUrl,
       type: "article",
       siteName: "뜨읏",
-      images: [{ url: `${SITE_URL}/og-default.png`, width: 1200, height: 630 }],
+      images: [{ url: `${SITE_URL}/og-default.png`, width: 1200, height: 630, alt: `${word} | 뜨읏` }],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: `${word} | 뜨읏`,
+      description,
+      images: [`${SITE_URL}/og-default.png`],
     },
   };
 }

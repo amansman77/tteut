@@ -143,12 +143,18 @@ export default function WordClient({ word, dictionary, lived, relatedWords, high
                     }`}>
                       {item.meaning}
                     </p>
-                    <button
-                      onClick={() => handleShare(item)}
-                      className="mt-2 text-xs text-gray-300 hover:text-gray-500 transition-colors"
-                    >
-                      {copiedId === item.id ? "링크 복사됨" : "공유"}
-                    </button>
+                    <div className="flex justify-end mt-3">
+                      <button
+                        onClick={() => handleShare(item)}
+                        className="inline-flex items-center gap-1 text-sm font-medium text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md hover:bg-gray-50 transition-colors"
+                      >
+                        {copiedId === item.id ? (
+                          <>링크 복사됨</>
+                        ) : (
+                          <>공유하기 <span aria-hidden>↗</span></>
+                        )}
+                      </button>
+                    </div>
                   </li>
                 );
               })}
