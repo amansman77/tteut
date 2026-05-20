@@ -115,16 +115,10 @@ export default function WordClient({ word, dictionary, lived, relatedWords, high
         {/* Type A: 사전 있음, 살아낸 뜻 없음 */}
         {dictionary && lived.length === 0 && (
           <div className="rounded-2xl p-6 border border-gray-200 bg-white">
-            <p className="text-gray-500 text-sm mb-2">
+            <p className="text-gray-500 text-sm leading-relaxed">
               사전은 이 말을 설명했지만,<br />
               아직 누군가의 삶으로는 남겨지지 않았어요.
             </p>
-            <button
-              onClick={() => inputRef.current?.scrollIntoView({ behavior: "smooth", block: "center" })}
-              className="text-sm font-medium text-gray-900 hover:underline"
-            >
-              첫 번째 뜻 남기기 →
-            </button>
           </div>
         )}
 
