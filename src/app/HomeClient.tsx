@@ -91,7 +91,7 @@ export default function HomeClient({ discoveryWords, recentMeanings }: Props) {
                   >
                     <div className="pl-3 border-l-2 border-gray-200 group-hover:border-gray-400 transition-colors">
                       <p className="text-xs text-gray-400 mb-1">{item.word}</p>
-                      <p className="text-gray-700 text-sm leading-relaxed">{item.meaning}</p>
+                      <p className="text-gray-700 text-sm leading-relaxed whitespace-pre-wrap">{item.meaning}</p>
                     </div>
                   </button>
                 </li>

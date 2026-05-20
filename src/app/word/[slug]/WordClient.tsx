@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
+import { useRouter } from "next/navigation";
 
 interface RelatedWord {
   word: string;
@@ -20,16 +21,31 @@ interface DictionaryResult {
   hanjaChars: HanjaChar[];
 }
 
+interface LivedMeaning {
+  id: number;
+  meaning: string;
+}
+
 interface Props {
   word: string;
   dictionary: DictionaryResult | null;
-  lived: string[];
+  lived: LivedMeaning[];
   relatedWords: RelatedWord[];
+  highlightId?: number;
 }
 
-export default function WordClient({ word, dictionary, lived, relatedWords }: Props) {
+export default function WordClient({ word, dictionary, lived, relatedWords, highlightId }: Props) {
+  const router = useRouter();
   const [myMeaning, setMyMeaning] = useState("");
   const [submitted, setSubmitted] = useState(false);
+  const [copiedId, setCopiedId] = useState<number | null>(null);
+  const highlightRef = useRef<HTMLLIElement | null>(null);
+
+  useEffect(() => {
+    if (highlightRef.current) {
+      highlightRef.current.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+  }, []);
 
   const handleSubmit = async () => {
     if (!myMeaning.trim()) return;
@@ -39,6 +55,32 @@ export default function WordClient({ word, dictionary, lived, relatedWords }: Pr
       body: JSON.stringify({ word, meaning: myMeaning.trim() }),
     });
     setSubmitted(true);
+  };
+
+  const handleShare = async (item: LivedMeaning) => {
+    const url = `${window.location.origin}/word/${encodeURIComponent(word)}?highlight=${item.id}`;
+    const shareData = {
+      title: `${word} | 뜨읏`,
+      text: item.meaning,
+      url,
+    };
+
+    if (navigator.share) {
+      try {
+        await navigator.share(shareData);
+        return;
+      } catch {
+        // user cancelled or share failed — fall through to clipboard
+      }
+    }
+
+    try {
+      await navigator.clipboard.writeText(url);
+      setCopiedId(item.id);
+      setTimeout(() => setCopiedId(null), 2000);
+    } catch {
+      // clipboard not available
+    }
   };
 
   return (
@@ -83,15 +125,33 @@ export default function WordClient({ word, dictionary, lived, relatedWords }: Pr
         {lived.length > 0 && (
           <div className="rounded-2xl p-6 border border-gray-200 bg-white">
             <p className="text-xs text-gray-400 uppercase tracking-widest mb-4">살아낸 뜻들</p>
-            <ul className="space-y-3">
-              {lived.map((item, i) => (
-                <li
-                  key={i}
-                  className="text-gray-700 text-sm leading-relaxed pl-3 border-l-2 border-gray-200"
-                >
-                  {item}
-                </li>
-              ))}
+            <ul className="space-y-4">
+              {lived.map((item) => {
+                const isHighlighted = item.id === highlightId;
+                return (
+                  <li
+                    key={item.id}
+                    ref={isHighlighted ? highlightRef : null}
+                    className={`group pl-3 border-l-2 transition-colors ${
+                      isHighlighted
+                        ? "border-gray-900"
+                        : "border-gray-200"
+                    }`}
+                  >
+                    <p className={`text-sm leading-relaxed whitespace-pre-wrap ${
+                      isHighlighted ? "text-gray-900 font-medium" : "text-gray-700"
+                    }`}>
+                      {item.meaning}
+                    </p>
+                    <button
+                      onClick={() => handleShare(item)}
+                      className="mt-2 text-xs text-gray-300 hover:text-gray-500 transition-colors"
+                    >
+                      {copiedId === item.id ? "링크 복사됨" : "공유"}
+                    </button>
+                  </li>
+                );
+              })}
             </ul>
           </div>
         )}

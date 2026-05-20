@@ -137,7 +137,7 @@ export default function SeedPage() {
               <div className="flex items-start justify-between gap-4">
                 <div className="flex-1 min-w-0">
                   <span className="text-xs font-medium text-amber-700 mb-1 block">{item.word}</span>
-                  <p className="text-sm text-gray-700 leading-relaxed">{item.meaning}</p>
+                  <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap">{item.meaning}</p>
                   <p className="text-xs text-gray-400 mt-2">{item.created_at}</p>
                 </div>
                 <div className="flex gap-2 shrink-0">
@@ -175,7 +175,7 @@ export default function SeedPage() {
             <ul className="space-y-2">
               {entries[w].map((m, i) => (
                 <li key={i} className="flex items-start gap-2">
-                  <span className="flex-1 text-sm text-gray-600 leading-relaxed pl-3 border-l-2 border-gray-200">
+                  <span className="flex-1 text-sm text-gray-600 leading-relaxed whitespace-pre-wrap pl-3 border-l-2 border-gray-200">
                     {m}
                   </span>
                   <button
