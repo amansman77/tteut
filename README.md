@@ -17,7 +17,6 @@
 - **Framework**: Next.js 16 (App Router), React 19
 - **Runtime/Hosting**: Cloudflare Workers, via `@opennextjs/cloudflare`
 - **Database**: Cloudflare D1 (SQLite)
-- **AI**: Anthropic API — used only to refine user-submitted sentences
 - **External APIs**: 국립국어원 표준국어대사전(stdict) for dictionary
   definitions, Google OAuth for admin login, Discord webhook for
   notifications

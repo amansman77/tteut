@@ -20,7 +20,7 @@ export default function SeedPage() {
   const [message, setMessage] = useState("");
 
   const load = useCallback(async () => {
-    const res = await fetch("/api/seed");
+    const res = await fetch("/api/admin/lived-meanings");
     const data = (await res.json()) as { entries: Entries; pending: PendingItem[] };
     setEntries(data.entries ?? {});
     setPending(data.pending ?? []);
@@ -35,7 +35,7 @@ export default function SeedPage() {
     setSaving(true);
     setMessage("");
     try {
-      const res = await fetch("/api/seed", {
+      const res = await fetch("/api/admin/lived-meanings", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ word: word.trim(), meaning: meaning.trim() }),
@@ -53,7 +53,7 @@ export default function SeedPage() {
   };
 
   const handleDelete = async (w: string, i: number) => {
-    await fetch("/api/seed", {
+    await fetch("/api/admin/lived-meanings", {
       method: "DELETE",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ word: w, index: i }),
@@ -62,7 +62,7 @@ export default function SeedPage() {
   };
 
   const handleReview = async (id: number, action: "approve" | "reject") => {
-    await fetch("/api/seed", {
+    await fetch("/api/admin/lived-meanings", {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ id, action }),

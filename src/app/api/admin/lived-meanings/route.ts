@@ -1,8 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getCloudflareContext } from "@opennextjs/cloudflare";
+import { requireAdminSession } from "@/lib/session";
 import { getAllEntries, addMeaning, deleteMeaning } from "@/lib/livedMeaningsStore";
 
 export async function GET() {
+  if (!(await requireAdminSession())) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
   const { env } = await getCloudflareContext({ async: true });
 
   const [entries, pending] = await Promise.all([
@@ -16,6 +21,10 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
+  if (!(await requireAdminSession())) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
   const { word, meaning } = (await req.json()) as { word: unknown; meaning: unknown };
 
   if (!word || typeof word !== "string" || word.trim().length === 0) {
@@ -30,6 +39,10 @@ export async function POST(req: NextRequest) {
 }
 
 export async function PATCH(req: NextRequest) {
+  if (!(await requireAdminSession())) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
   const { id, action } = (await req.json()) as { id: unknown; action: unknown };
 
   if (typeof id !== "number") {
@@ -61,6 +74,10 @@ export async function PATCH(req: NextRequest) {
 }
 
 export async function DELETE(req: NextRequest) {
+  if (!(await requireAdminSession())) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
   const { word, index } = (await req.json()) as { word: unknown; index: unknown };
 
   if (!word || typeof word !== "string") {

@@ -27,7 +27,7 @@ not a translation, when searching the codebase.
 | 살아낸 뜻 / lived meaning | A user-submitted, personal definition of a word. Stored in `tt_lived_meanings`, this is the app's core content. |
 | 관련어 / semantic edges | Words whose lived meanings share vocabulary, shown as "related words" on a word page. Computed by a text-overlap heuristic, **not** an LLM call — see `src/lib/semanticEdgeGenerator.ts`. |
 | 검색 수요 / search demand | Tracking of which words visitors look up, especially ones with no lived meaning yet, used to prioritize what content to seed next (ADR-PROD-011). |
-| 씨앗 / seed | The admin curation workflow at `/seed`: reviewing pending anonymous submissions and manually adding lived meanings. |
+| 씨앗 / seed | The admin curation workflow at `/seed` (UI) backed by `/api/admin/lived-meanings` (API): reviewing pending anonymous submissions and manually adding lived meanings. |
 
 ## Architecture
 
@@ -38,14 +38,20 @@ not a translation, when searching the codebase.
 - **Database**: Cloudflare D1 (SQLite), binding name `DB`. Schema lives in
   `migrations/*.sql`, applied in filename order — that's the source of truth
   for the data model, not any doc.
-- **AI usage**: Anthropic API (`@anthropic-ai/sdk`) is used in exactly one
-  place — `src/app/api/refine/route.ts` — to lightly rephrase a
-  user-submitted meaning into a more personal-sounding sentence. It is not
-  used for the dictionary lookup, related-words, or anything else.
+- **AI usage**: none at runtime, despite the name "semantic edges" —
+  related-word computation is a plain text-overlap heuristic (see Glossary).
+  An earlier Anthropic-backed "refine my sentence" endpoint existed but was
+  never wired up to any UI; it was removed as dead code, along with two
+  other orphaned routes from a pre-redesign flow (`/api/lived`,
+  `/api/transform`) — see git history if reviving any of them.
 - **Auth**: Google OAuth, gated by a single hardcoded `ADMIN_EMAIL` env var —
   there is no multi-user account system. It exists only to protect `/seed`.
-  Session is a signed JWT in an httpOnly cookie (`src/lib/session.ts`),
-  enforced by `src/middleware.ts` for the `/seed` route only.
+  Session is a signed JWT in an httpOnly cookie (`src/lib/session.ts`).
+  `src/proxy.ts` (Next.js 16's replacement for `middleware.ts`) redirects
+  unauthenticated visits to the `/seed` **page**, but does not cover
+  `/api/*` — API routes must call `requireAdminSession()` themselves. Per
+  Next.js's own guidance, don't rely on proxy/middleware alone for
+  authorization; every `/api/admin/*` route re-checks the session.
 - **Notifications**: A Discord webhook (`src/lib/notify.ts`) fires on two
   events — a word searched with no lived meaning yet, and a new anonymous
   submission — so the maintainer can react without polling the DB.
@@ -56,10 +62,11 @@ not a translation, when searching the codebase.
 src/app/
   page.tsx, HomeClient.tsx          Home: search box + discovery/demand/recent lists
   word/[slug]/page.tsx, WordClient.tsx  Word page: dictionary + lived meanings + related words
-  seed/page.tsx                     Admin curation UI (auth-gated by middleware)
+  seed/page.tsx                     Admin curation UI (auth-gated by proxy.ts)
   auth/google/, auth/callback/, auth/logout/   Google OAuth flow for the admin
-  api/lived/, api/submit/, api/refine/, api/transform/, api/seed/
-  api/admin/semantic-edges/generate/  Recomputes tt_semantic_edges from scratch
+  api/submit/                       Public: anonymous meaning submission
+  api/admin/lived-meanings/         Admin-only: curate lived meanings + review pending submissions
+  api/admin/semantic-edges/generate/  Admin-only: recomputes tt_semantic_edges from scratch
 src/lib/
   dictionary.ts             stdict API client (사전적 의미)
   hanjaLookup.ts             Hanja (漢字) breakdown for dictionary entries
@@ -76,8 +83,8 @@ docs/strategy.md             Living doc: current focus, next steps, open questio
 
 | Table | Purpose |
 |---|---|
-| `tt_lived_meanings` | Published lived meanings, shown on word pages. Written by admin approval (`/seed`) or directly via the admin panel. |
-| `tt_user_meanings` | Anonymous submissions (`/api/submit`), status `pending`/`approved`/`rejected`. Admin reviews these at `/seed`; approving copies the row into `tt_lived_meanings`. |
+| `tt_lived_meanings` | Published lived meanings, shown on word pages. Written by admin approval or directly via `/api/admin/lived-meanings`. |
+| `tt_user_meanings` | Anonymous submissions (`/api/submit`), status `pending`/`approved`/`rejected`. Admin reviews these via `/api/admin/lived-meanings` (`PATCH`); approving copies the row into `tt_lived_meanings`. |
 | `tt_semantic_edges` | Cached "related words" per word, regenerated wholesale by `POST /api/admin/semantic-edges/generate` (admin-only). Not updated incrementally. |
 | `tt_search_demands` | One row per normalized search term, incremented on every word-page visit; used to surface "지금 찾고 있는 뜻" on the home page. |
 
@@ -93,10 +100,9 @@ None of these are typed as required at build time — missing ones fail soft
 
 | Variable | Used by | Effect if missing |
 |---|---|---|
-| `ANTHROPIC_API_KEY` | `/api/refine` | Refine endpoint errors at request time |
 | `STDICT_API_KEY`, `STDICT_CERT_KEY_NO` | `src/lib/dictionary.ts` | Dictionary lookups return `null` (word treated as dictionary-not-found) |
 | `SESSION_SECRET` | `src/lib/session.ts` | Session creation/verification throws |
-| `ADMIN_EMAIL` | `src/middleware.ts`, auth callback, admin routes | No email will ever match; `/seed` becomes unreachable |
+| `ADMIN_EMAIL` | `src/proxy.ts`, auth callback, `/api/admin/*` routes | No email will ever match; `/seed` and `/api/admin/*` become unreachable |
 | `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GOOGLE_REDIRECT_URI` | `/auth/google`, `/auth/callback` | OAuth flow returns a config error instead of redirecting |
 | `DISCORD_WEBHOOK_URL` | `src/lib/notify.ts` | Notifications are skipped silently |
 | `NEXT_PUBLIC_SITE_URL` | `src/lib/config.ts` | Falls back to the production URL — wrong for local metadata/canonical links |

@@ -1,20 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
-import { cookies } from "next/headers";
-import { verifySession, COOKIE_NAME } from "@/lib/session";
+import { requireAdminSession } from "@/lib/session";
 import { getAllEntries } from "@/lib/livedMeaningsStore";
 import { generateSemanticEdges } from "@/lib/semanticEdgeGenerator";
 import { upsertSemanticEdge, clearSemanticEdges } from "@/lib/semanticEdgesStore";
 
-async function requireAdmin(): Promise<boolean> {
-  const jar = await cookies();
-  const token = jar.get(COOKIE_NAME)?.value;
-  if (!token) return false;
-  const email = await verifySession(token);
-  return email === process.env.ADMIN_EMAIL;
-}
-
 export async function POST(_req: NextRequest) {
-  if (!(await requireAdmin())) {
+  if (!(await requireAdminSession())) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
