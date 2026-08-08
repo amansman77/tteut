@@ -47,11 +47,18 @@ not a translation, when searching the codebase.
 - **Auth**: Google OAuth, gated by a single hardcoded `ADMIN_EMAIL` env var —
   there is no multi-user account system. It exists only to protect `/seed`.
   Session is a signed JWT in an httpOnly cookie (`src/lib/session.ts`).
-  `src/proxy.ts` (Next.js 16's replacement for `middleware.ts`) redirects
-  unauthenticated visits to the `/seed` **page**, but does not cover
-  `/api/*` — API routes must call `requireAdminSession()` themselves. Per
-  Next.js's own guidance, don't rely on proxy/middleware alone for
-  authorization; every `/api/admin/*` route re-checks the session.
+  `src/middleware.ts` redirects unauthenticated visits to the `/seed`
+  **page**, but does not cover `/api/*` — API routes must call
+  `requireAdminSession()` themselves. Per Next.js's own guidance, don't rely
+  on middleware alone for authorization; every `/api/admin/*` route
+  re-checks the session.
+  **Do not rename this file to `proxy.ts`**: Next.js 16 renamed the
+  `middleware` file convention to `proxy`, and the top-of-file warning in
+  this doc says to heed deprecation notices — but `proxy.ts` forces the
+  Node.js runtime with no way to opt back into Edge, and the deployed
+  `@opennextjs/cloudflare` adapter (currently 1.19.4) cannot build a
+  Node.js-runtime proxy (`ERROR Node.js middleware is not currently
+  supported`). Revisit this once OpenNext adds support.
 - **Notifications**: A Discord webhook (`src/lib/notify.ts`) fires on two
   events — a word searched with no lived meaning yet, and a new anonymous
   submission — so the maintainer can react without polling the DB.
@@ -62,7 +69,7 @@ not a translation, when searching the codebase.
 src/app/
   page.tsx, HomeClient.tsx          Home: search box + discovery/demand/recent lists
   word/[slug]/page.tsx, WordClient.tsx  Word page: dictionary + lived meanings + related words
-  seed/page.tsx                     Admin curation UI (auth-gated by proxy.ts)
+  seed/page.tsx                     Admin curation UI (auth-gated by src/middleware.ts)
   auth/google/, auth/callback/, auth/logout/   Google OAuth flow for the admin
   api/submit/                       Public: anonymous meaning submission
   api/admin/lived-meanings/         Admin-only: curate lived meanings + review pending submissions
@@ -102,7 +109,7 @@ None of these are typed as required at build time — missing ones fail soft
 |---|---|---|
 | `STDICT_API_KEY`, `STDICT_CERT_KEY_NO` | `src/lib/dictionary.ts` | Dictionary lookups return `null` (word treated as dictionary-not-found) |
 | `SESSION_SECRET` | `src/lib/session.ts` | Session creation/verification throws |
-| `ADMIN_EMAIL` | `src/proxy.ts`, auth callback, `/api/admin/*` routes | No email will ever match; `/seed` and `/api/admin/*` become unreachable |
+| `ADMIN_EMAIL` | `src/middleware.ts`, auth callback, `/api/admin/*` routes | No email will ever match; `/seed` and `/api/admin/*` become unreachable |
 | `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GOOGLE_REDIRECT_URI` | `/auth/google`, `/auth/callback` | OAuth flow returns a config error instead of redirecting |
 | `DISCORD_WEBHOOK_URL` | `src/lib/notify.ts` | Notifications are skipped silently |
 | `NEXT_PUBLIC_SITE_URL` | `src/lib/config.ts` | Falls back to the production URL — wrong for local metadata/canonical links |
