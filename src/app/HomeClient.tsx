@@ -10,7 +10,7 @@ interface RecentMeaning {
 
 interface DemandWord {
   word: string;
-  search_count: number;
+  searchCount: number;
 }
 
 interface Props {
@@ -100,7 +100,7 @@ export default function HomeClient({ discoveryWords, recentMeanings, demandWords
                         <p className="text-sm font-medium text-gray-700 group-hover:text-gray-900 transition-colors">
                           {item.word}
                         </p>
-                        <p className="text-xs text-gray-400">{item.search_count}명이 찾고 있어요</p>
+                        <p className="text-xs text-gray-400">{item.searchCount}명이 찾고 있어요</p>
                       </div>
                       <p className="text-xs text-gray-400">
                         {i % 2 === 0

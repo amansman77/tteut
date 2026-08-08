@@ -1,14 +1,13 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-
-type Entries = Record<string, string[]>;
+import type { Entries } from "@/lib/livedMeaningsStore";
 
 interface PendingItem {
   id: number;
   word: string;
   meaning: string;
-  created_at: string;
+  createdAt: string;
 }
 
 export default function SeedPage() {
@@ -138,7 +137,7 @@ export default function SeedPage() {
                 <div className="flex-1 min-w-0">
                   <span className="text-xs font-medium text-amber-700 mb-1 block">{item.word}</span>
                   <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap">{item.meaning}</p>
-                  <p className="text-xs text-gray-400 mt-2">{item.created_at}</p>
+                  <p className="text-xs text-gray-400 mt-2">{item.createdAt}</p>
                 </div>
                 <div className="flex gap-2 shrink-0">
                   <button

@@ -6,14 +6,14 @@ import { notifyMissingWord } from "@/lib/notify";
 import WordClient from "./WordClient";
 
 interface Props {
-  params: Promise<{ slug: string }>;
+  params: Promise<{ word: string }>;
   searchParams: Promise<{ highlight?: string }>;
 }
 
 export async function generateMetadata({ params, searchParams }: Props): Promise<Metadata> {
-  const { slug } = await params;
+  const { word: rawWord } = await params;
   const { highlight } = await searchParams;
-  const word = decodeURIComponent(slug);
+  const word = decodeURIComponent(rawWord);
   const canonical = `${SITE_URL}/word/${encodeURIComponent(word)}`;
 
   const { env } = await getCloudflareContext({ async: true });
@@ -77,9 +77,9 @@ function getDemandType(dictionaryFound: boolean, livedCount: number): string {
 }
 
 export default async function WordPage({ params, searchParams }: Props) {
-  const { slug } = await params;
+  const { word: rawWord } = await params;
   const { highlight } = await searchParams;
-  const word = decodeURIComponent(slug);
+  const word = decodeURIComponent(rawWord);
 
   const { env } = await getCloudflareContext({ async: true });
 
@@ -108,9 +108,9 @@ export default async function WordPage({ params, searchParams }: Props) {
 
   try {
     await env.DB.prepare(`
-      INSERT INTO tt_search_demands (normalized_term, raw_term, search_count, dictionary_status, lived_meaning_count, demand_type, fulfilled, last_seen_at)
+      INSERT INTO tt_search_demands (normalized_word, raw_word, search_count, dictionary_status, lived_meaning_count, demand_type, fulfilled, last_seen_at)
       VALUES (?, ?, 1, ?, ?, ?, ?, datetime('now'))
-      ON CONFLICT (normalized_term) DO UPDATE SET
+      ON CONFLICT (normalized_word) DO UPDATE SET
         search_count = search_count + 1,
         dictionary_status = excluded.dictionary_status,
         lived_meaning_count = excluded.lived_meaning_count,

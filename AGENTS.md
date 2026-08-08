@@ -68,7 +68,7 @@ not a translation, when searching the codebase.
 ```
 src/app/
   page.tsx, HomeClient.tsx          Home: search box + discovery/demand/recent lists
-  word/[slug]/page.tsx, WordClient.tsx  Word page: dictionary + lived meanings + related words
+  word/[word]/page.tsx, WordClient.tsx  Word page: dictionary + lived meanings + related words
   seed/page.tsx                     Admin curation UI (auth-gated by src/middleware.ts)
   auth/google/, auth/callback/, auth/logout/   Google OAuth flow for the admin
   api/submit/                       Public: anonymous meaning submission
@@ -93,12 +93,20 @@ docs/strategy.md             Living doc: current focus, next steps, open questio
 | `tt_lived_meanings` | Published lived meanings, shown on word pages. Written by admin approval or directly via `/api/admin/lived-meanings`. |
 | `tt_user_meanings` | Anonymous submissions (`/api/submit`), status `pending`/`approved`/`rejected`. Admin reviews these via `/api/admin/lived-meanings` (`PATCH`); approving copies the row into `tt_lived_meanings`. |
 | `tt_semantic_edges` | Cached "related words" per word, regenerated wholesale by `POST /api/admin/semantic-edges/generate` (admin-only). Not updated incrementally. |
-| `tt_search_demands` | One row per normalized search term, incremented on every word-page visit; used to surface "지금 찾고 있는 뜻" on the home page. |
+| `tt_search_demands` | One row per normalized searched word, incremented on every word-page visit; used to surface "지금 찾고 있는 뜻" on the home page. Columns are `normalized_word`/`raw_word` (renamed from `*_term` in migration 0005 to match the `word` terminology used everywhere else). |
 
 A word can have dictionary meaning, lived meaning, both, or neither — the
 "demand type" branching for that (`DICTIONARY_EMPTY` / `FULFILLED` /
 `BOTH_EMPTY` / `LIVED_MEANING_EMPTY`) lives in `getDemandType()` in
-`src/app/word/[slug]/page.tsx`.
+`src/app/word/[word]/page.tsx`.
+
+**Naming convention**: `word` is the one term for "the thing a user looks up
+or defines" everywhere — route segments (`/word/[word]`), DB columns, API
+request/response bodies, TS identifiers. Don't introduce `term`, `slug`, or
+`query` as synonyms for it. DB columns are surfaced to TS in camelCase via
+`SELECT snake_col as camelCol` (see `src/app/page.tsx`,
+`src/app/api/admin/lived-meanings/route.ts`) — raw snake_case column names
+should never leak into a TS interface or JSON response.
 
 ## Environment variables
 

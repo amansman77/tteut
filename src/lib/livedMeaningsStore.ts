@@ -1,6 +1,6 @@
 import { getCloudflareContext } from "@opennextjs/cloudflare";
 
-type Entries = Record<string, string[]>;
+export type Entries = Record<string, string[]>;
 
 async function getDB(): Promise<D1Database> {
   const { env } = await getCloudflareContext({ async: true });

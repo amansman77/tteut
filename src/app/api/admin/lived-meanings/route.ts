@@ -13,8 +13,8 @@ export async function GET() {
   const [entries, pending] = await Promise.all([
     getAllEntries(),
     env.DB.prepare(
-      "SELECT id, word, meaning, created_at FROM tt_user_meanings WHERE status = 'pending' ORDER BY created_at ASC"
-    ).all<{ id: number; word: string; meaning: string; created_at: string }>(),
+      "SELECT id, word, meaning, created_at as createdAt FROM tt_user_meanings WHERE status = 'pending' ORDER BY created_at ASC"
+    ).all<{ id: number; word: string; meaning: string; createdAt: string }>(),
   ]);
 
   return NextResponse.json({ entries, pending: pending.results });
