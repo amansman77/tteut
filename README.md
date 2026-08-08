@@ -1,195 +1,92 @@
 # 뜨읏 (Tteut)
-> 내가 살린 살이를 드러내는 플랫폼
-> 뜻을 발견하고, 의미를 나누는 곳
----
-## 🧭 Vision
-뜨읏은 단순한 AI 서비스가 아니다.  
-사람이 살아내며 붙잡은 뜻을 발견하고,  
-그 의미를 기록하고, 나누며  
-결국 자기 자신을 만들어가는 플랫폼이다.
-> 사전은 뜻을 설명하고  
-> 삶은 뜻을 만듭니다
-삶의 의미를 찾는 것이 아니라,  
-삶이 곧 의미다.
-그리고 그 의미는  
-우리가 사용하는 언어를 통해 드러난다.
----
-## 💡 Problem
-사람은 같은 단어를 사용하지만  
-같은 뜻으로 살아가지 않는다.
-“존중”, “사랑”, “책임”, “외로움”
-사전은 정의를 알려주지만  
-삶은 각자의 방식으로 그 뜻을 만든다.
-예를 들어,
-어떤 사람에게 존중은 예의이고,  
-어떤 사람에게는 끝까지 이야기를 들어주는 일이며,  
-어떤 사람에게는 상대의 마음을 먼저 생각해보는 일이다.
-문제는  
-우리가 살아낸 뜻은 기록되지 않고,  
-쉽게 흘러가버린다는 것이다.
----
-## 🎯 Solution
-뜨읏은  
-사전적 의미를 넘어  
-“내가 살아낸 뜻”을 발견하게 한다.
-1. **통용되는 의미를 본다**
-   * 사전적 의미
-   * 사회적으로 공유되는 기본 정의
-2. **나의 의미를 발견한다**
-   * 나는 이 단어를 어떻게 이해하는가
-   * 나는 무엇을 중요하게 여기는가
-3. **의미를 기록한다**
-   * 내가 살아낸 뜻
-   * 내가 붙잡은 정의
-4. **의미를 나눈다**
-   * 다른 사람의 뜻을 만나고
-   * 서로를 더 깊이 이해한다
----
-## 🔄 Core Loop
-```text
-단어 → 의미 → 삶 → 기록 → 공유 → 새로운 이해
 
-뜨읏은
-이 의미의 순환을 지속시키는 플랫폼이다.
+> 사전은 뜻을 설명하고, 삶은 뜻을 만듭니다.
 
-⸻
+뜨읏은 단어의 사전적 의미 옆에, 사람들이 실제 삶에서 그 단어를 어떻게
+이해하고 살아냈는지 — "살아낸 뜻" — 를 기록하고 나누는 플랫폼입니다.
+사용자는 단어를 검색해 사전적 정의와 다른 사람들의 살아낸 뜻을 함께 보고,
+자신의 뜻을 직접 남길 수 있습니다.
 
-🧱 Platform Structure (다움)
+제품 비전과 전략의 전체 서술은 [docs/vision.md](./docs/vision.md)에,
+개별 제품 결정과 그 근거는 [docs/adr/](./docs/adr/)에 있습니다. 코드
+구조와 아키텍처, 특히 AI 에이전트가 작업 전에 알아야 할 내용은
+[AGENTS.md](./AGENTS.md)를 참고하세요.
 
-뜨읏은 ‘다움’ 플랫폼 안에서
-언어와 삶을 연결하는 중심 축이다.
+## Tech stack
 
-* 벗 (Buddy) → 감정과 생각을 끌어내는 대화 인터페이스
-* 뜨읏 → 뜻을 발견하고 의미를 구조화하는 플랫폼
-* 단단이 → 반복과 실천을 통해 삶에 베게 하는 챌린지
-* 시간의 봉투 → 시간 속에서 의미를 다시 꺼내보는 기록
+- **Framework**: Next.js 16 (App Router), React 19
+- **Runtime/Hosting**: Cloudflare Workers, via `@opennextjs/cloudflare`
+- **Database**: Cloudflare D1 (SQLite)
+- **AI**: Anthropic API — used only to refine user-submitted sentences
+- **External APIs**: 국립국어원 표준국어대사전(stdict) for dictionary
+  definitions, Google OAuth for admin login, Discord webhook for
+  notifications
+- **Styling**: Tailwind CSS
 
-👉 언어 → 관계 → 행동 → 시간
+## Getting started
 
-삶 전체를 하나의 흐름으로 연결한다.
+```bash
+npm install
+cp .env.local.example .env.local   # fill in the values you need (see below)
+npm run dev
+```
 
-⸻
+Local `next dev` runs on the Node runtime and does **not** have Cloudflare
+bindings (D1, secrets) available — pages that read `env.DB` will fail
+locally unless run through `npm run preview` (which runs the built Worker
+under `wrangler dev`, with local D1 emulation).
 
-🚀 Growth Strategy
+Required/optional environment variables are documented in
+[AGENTS.md](./AGENTS.md#environment-variables).
 
-1. SEO 기반 Growth Artifact
+### Database
 
-초기 전략은 앱이 아니라
+Schema is managed as D1 migrations in [`migrations/`](./migrations):
 
-👉 검색 기반 경험 진입점 구축이다.
+```bash
+npx wrangler d1 migrations apply <database-name> --local   # local dev DB
+npx wrangler d1 migrations apply <database-name>            # production
+```
 
-사용자가
-어떤 단어의 뜻을 고민하는 순간
-바로 뜨읏을 경험하게 한다.
+`<database-name>` is the `database_name` in [`wrangler.toml`](./wrangler.toml).
 
-⸻
+## Project structure
 
-🎯 First Artifact: 뜻 발견기
+```
+src/app/    Next.js App Router pages, layouts, and API routes
+src/lib/    Server-side modules: D1 access, external API clients, auth
+migrations/ D1 schema (source of truth for the data model)
+docs/adr/   Product decisions (ADR-PROD-*) and their reasoning
+docs/       strategy.md (current focus), vision.md (full product vision)
+```
 
-개요
+See [AGENTS.md](./AGENTS.md) for the full directory map, data model, and
+glossary of domain terms (뜻, 살아낸 뜻, 관련어, 검색 수요, 씨앗).
 
-사용자가 입력한 단어에 대해
+## Scripts
 
-* 통용되는 의미를 보고
-* 자신의 의미를 발견하고
-* 삶의 정의를 남길 수 있는 도구
+| Command | Purpose |
+|---|---|
+| `npm run dev` | Local dev server (Node runtime) |
+| `npm run lint` | ESLint |
+| `npm run build` | Next.js production build |
+| `npm run build:worker` | Build the Cloudflare Worker bundle |
+| `npm run preview` | Run the built Worker locally via `wrangler dev` |
+| `npm run deploy` | Build the Worker and deploy to Cloudflare |
 
-⸻
+## Deployment
 
-예시
+```bash
+npm run deploy
+```
 
-입력
+Deploys to the Cloudflare Worker configured in `wrangler.toml`. Worker
+secrets/vars (`ADMIN_EMAIL`, `GOOGLE_REDIRECT_URI`, etc.) are managed via
+`wrangler.toml` `[vars]` and `wrangler secret put`, not `.env` files.
 
-존중
+## Philosophy
 
-출력
+> 뜻은 찾는 것이 아니라 살아내며 만들어지는 것이다.
 
-사전적 의미
-
-상대의 가치와 존재를 인정하고
-함부로 대하지 않는 것
-
-삶의 의미
-
-존중은
-그 사람의 말을 들어주고
-그 사람의 마음을 생각해보는 것이다
-
-질문
-
-당신에게 존중은 무엇인가요?
-
-⸻
-
-🔍 User Flow
-
-검색 → 랜딩 → 단어 입력 → 의미 발견 → 기록 → 공유
-
-⸻
-
-🧪 Success Metric
-
-* “아 맞아, 이거다”라는 반응이 나오는가
-* 사용자가 자신의 뜻을 직접 작성하는가
-* 결과를 복사하거나 공유하는가
-* 다른 단어를 다시 입력해보는가
-
-⸻
-
-🛠 Tech Stack (Proposed)
-
-* Frontend: Next.js (SEO 최적화)
-* UI: React
-* Backend: Hono
-* Runtime: Cloudflare / Edge
-* AI: LLM (local or API 기반)
-
-⸻
-
-🎯 MVP Scope
-
-초기 MVP는
-단 하나의 경험에 집중한다.
-
-내가 살아낸 뜻을 발견하는 경험
-
-구성
-
-* Input: 단어 / 감정 / 상황 입력
-* Processing:
-    * 사전적 의미
-    * 삶의 의미 확장
-    * 질문 생성
-* Output:
-    * “나의 뜻”
-
-⸻
-
-📌 Key Insight
-
-정답이 아니라
-살아낸 정의가 사람을 만든다
-
-다른 서비스는 답을 준다.
-뜨읏은 뜻을 만든다.
-
-⸻
-
-🔥 Next Step
-
-* 뜻 발견기 1페이지 구현
-* SEO 키워드 정의 및 랜딩 페이지 제작
-* 초기 사용자 반응 수집
-* 의미 기록 구조 설계
-
-⸻
-
-🧠 Philosophy
-
-뜻은 찾는 것이 아니라
-살아내며 만들어지는 것이다
-
-뜨읏은
-그 살아낸 의미를 발견하고
-붙잡고
-나누는 플랫폼이다.
+For the full vision, problem statement, and growth strategy, see
+[docs/vision.md](./docs/vision.md).
